@@ -1,5 +1,5 @@
 parser.tab.c
 parser.tab.h
 lex.yy.c
-lexer
+bin/compiler
 TODO.txt

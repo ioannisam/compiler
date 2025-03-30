@@ -9,20 +9,21 @@ generate() {
 compile() {
     generate
     echo "Compiling executable..."
-    gcc -o bin/lexer src/lexer/lex.yy.c src/parser/parser.tab.c -lfl
+    gcc -o bin/compiler src/lexer/lex.yy.c src/parser/parser.tab.c src/parser/ast.c -lfl
 }
 
 run() {
     compile
     echo "Running executable..."
-    ./bin/lexer
+    echo "Enter input (press Ctrl+D when done):"
+    ./bin/compiler /dev/stdin
 }
 
 example() { 
     compile
     echo "Running executable..."
     echo "Running example..."
-    echo 'print "Hello, World!";' | ./bin/lexer
+    ./bin/compiler test/test0.txt
 }
 
 clean() {
@@ -35,13 +36,13 @@ clean() {
 help() {
     echo "Usage: $0 {generate|compile|run|example|clean}"
     echo "  generate   - Generate files"
-    echo "  compile    - Generate and compile files"
-    echo "  run        - Generate, compile and run files"
-    echo "  example    - Generate, compile, run and execute an example"
+    echo "  compile    - Generate and compile files into an executable"
+    echo "  run        - Generate, compile and run interactively"
+    echo "  example    - Generate, compile and run an example"
     echo "  clean      - Remove all generated files"
 }
 
-# script logic
+# logic
 case "$1" in
     generate)
         generate
