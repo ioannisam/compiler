@@ -33,28 +33,48 @@ This project aims to implement a `compiler` for a simple programming language.
 
 ## How to Build
 
-1. Install **Flex** and **Bison**:
+In order to build, you will need to install both **Bison** and **Flex**:
    ```bash
-   sudo pacman -S flex bison
+   sudo pacman -S bison flex
    ```
    *(Use the package manager specific to your operating system)*
-2. Generate parser files:
+
+### Script
+
+You can use the provided script `build/utils.sh` to automate the build process. The script supports the following commands:
+
+- **`generate`**: Generates the parser and lexer files using `bison` and `flex`.
+- **`compile`**: Generates the files (if not already generated) and compiles them into an executable binary.
+- **`run`**: Generates, compiles and runs the executable.
+- **`example`**: Runs the executable with a predefined example input (`print "Hello, World!";`).
+- **`clean`**: Removes all generated files and the compiled binary.
+
+Example:
    ```bash
-   bison -d parser.y
+   ./build/utils.sh run
    ```
-3. Generate lexer file:
+
+### Manual
+
+You can instead opt to build the project manually:
+
+1. Generate parser files:
    ```bash
-   flex lang.l
+   bison -d -o src/parser/parser.tab.c src/parser/parser.y
    ```
-4. Compile executable `lexer`:
+2. Generate lexer file:
    ```bash
-   gcc lex.yy.c parser.tab.c -o lexer
+   flex -o src/lexer/lex.yy.c src/lexer/lang.l
    ```
-5. Run executable `lexer`:
+3. Compile executable `lexer`:
    ```bash
-   ./lexer
+   gcc -o bin/lexer src/lexer/lex.yy.c src/parser/parser.tab.c -lfl
    ```
-6. Input expression:
+4. Run executable `lexer`:
+   ```bash
+   ./bin/lexer
+   ```
+5. Input expression:
    ```bash
    print "Hello World!";
    ```
