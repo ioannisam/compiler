@@ -66,6 +66,29 @@ ASTNode* create_binop_node(char op, ASTNode* left, ASTNode* right) {
     return node;
 }
 
+// Creates a compound node with a first statement and optionally a pointer to the next statement.
+ASTNode* create_compound_node(ASTNode* stmt, ASTNode* next) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = NODE_COMPOUND;
+    node->binop.left = stmt;
+    node->binop.right = next;
+    return node;
+}
+
+// Appends a statement to an existing compound node.
+// If compound is NULL, the function simply returns the new statement.
+ASTNode* append_statement(ASTNode* compound, ASTNode* stmt) {
+    if (!compound) return stmt;
+
+    // Traverse to the last statement in the compound list.
+    ASTNode* current = compound;
+    while (current->binop.right != NULL) {
+        current = current->binop.right;
+    }
+    current->binop.right = stmt;
+    return compound;
+}
+
 void print_ast(ASTNode *node, int indent) {
     if (!node) return;
     for (int i = 0; i < indent; i++) printf("  ");
@@ -89,6 +112,24 @@ void print_ast(ASTNode *node, int indent) {
         case NODE_IDENT:
             printf("IDENT(%s)\n", node->str_value);
             break;
-        // [more cases...]
+        case NODE_IF:
+            printf("IF\n");
+            print_ast(node->control.condition, indent + 1);
+            print_ast(node->control.body, indent + 1);
+            break;
+        case NODE_WHILE:
+            printf("WHILE\n");
+            print_ast(node->control.condition, indent + 1);
+            print_ast(node->control.body, indent + 1);
+            break;
+        case NODE_ASSIGN:
+            printf("ASSIGN(%s)\n", node->str_value);
+            print_ast(node->binop.left, indent + 1);
+            break;
+        case NODE_COMPOUND:
+            printf("COMPOUND\n");
+            print_ast(node->binop.left, indent + 1);
+            print_ast(node->binop.right, indent);
+            break;
     }
 }

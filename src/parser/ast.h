@@ -10,7 +10,8 @@ typedef enum {
     NODE_BINOP,
     NODE_IDENT,
     NODE_NUM,
-    NODE_STR
+    NODE_STR,
+    NODE_COMPOUND   // Added compound node type
 } NodeType;
 
 typedef struct ASTNode {
@@ -21,7 +22,7 @@ typedef struct ASTNode {
         struct {
             struct ASTNode* left;
             struct ASTNode* right;
-            char op;  // '+', '-', etc.
+            char op;
         } binop;
         struct {
             struct ASTNode* condition;
@@ -39,6 +40,10 @@ ASTNode* create_binop_node(char op, ASTNode* left, ASTNode* right);
 ASTNode* create_ident_node(char* id);
 ASTNode* create_num_node(int value);
 ASTNode* create_str_node(char* str);
+
+// New functions for compound statements
+ASTNode* create_compound_node(ASTNode* stmt, ASTNode* next);
+ASTNode* append_statement(ASTNode* compound, ASTNode* stmt);
 
 void print_ast(ASTNode* node, int indent);
 void free_ast(ASTNode* node);
