@@ -11,8 +11,14 @@ typedef enum {
     NODE_IDENT,
     NODE_NUM,
     NODE_STR,
-    NODE_COMPOUND   // Added compound node type
+    NODE_COMPOUND,
+    NODE_UNOP
 } NodeType;
+
+typedef enum {
+    OP_EQ, OP_LT, OP_GT, OP_LSHIFT, OP_RSHIFT,
+    OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_AND, OP_OR, OP_XOR, OP_NOT
+} Operator;
 
 typedef struct ASTNode {
     NodeType type;
@@ -22,12 +28,21 @@ typedef struct ASTNode {
         struct {
             struct ASTNode* left;
             struct ASTNode* right;
-            char op;
+            Operator op;
         } binop;
         struct {
             struct ASTNode* condition;
-            struct ASTNode* body;
+            struct ASTNode* loop_body;
+            struct ASTNode* if_body;
+            struct ASTNode* else_body;
         } control;
+        struct {
+            Operator op;
+            struct ASTNode* operand;
+        } unop;
+        struct {
+            struct ASTNode* expr;
+        } print_expr;
     };
 } ASTNode;
 
@@ -36,14 +51,14 @@ ASTNode* create_print_node(ASTNode* expr);
 ASTNode* create_if_node(ASTNode* cond, ASTNode* body);
 ASTNode* create_while_node(ASTNode* cond, ASTNode* body);
 ASTNode* create_assign_node(char* id, ASTNode* value);
-ASTNode* create_binop_node(char op, ASTNode* left, ASTNode* right);
+ASTNode* create_binop_node(Operator op, ASTNode* left, ASTNode* right);
 ASTNode* create_ident_node(char* id);
 ASTNode* create_num_node(int value);
 ASTNode* create_str_node(char* str);
-
-// New functions for compound statements
 ASTNode* create_compound_node(ASTNode* stmt, ASTNode* next);
 ASTNode* append_statement(ASTNode* compound, ASTNode* stmt);
+ASTNode* create_unop_node(Operator op, ASTNode* operand);
+ASTNode* create_if_else_node(ASTNode* cond, ASTNode* if_body, ASTNode* else_body);
 
 void print_ast(ASTNode* node, int indent);
 void free_ast(ASTNode* node);

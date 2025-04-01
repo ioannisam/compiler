@@ -8,7 +8,7 @@
 ASTNode* create_print_node(ASTNode *expr) {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->type = NODE_PRINT;
-    node->control.body = expr;
+    node->print_expr.expr = expr;
     return node;
 }
 
@@ -37,7 +37,7 @@ ASTNode* create_if_node(ASTNode* cond, ASTNode* body) {
     ASTNode* node = malloc(sizeof(ASTNode));
     node->type = NODE_IF;
     node->control.condition = cond;
-    node->control.body = body;
+    node->control.if_body = body;
     return node;
 }
 
@@ -45,7 +45,7 @@ ASTNode* create_while_node(ASTNode* cond, ASTNode* body) {
     ASTNode* node = malloc(sizeof(ASTNode));
     node->type = NODE_WHILE;
     node->control.condition = cond;
-    node->control.body = body;
+    node->control.loop_body = body;
     return node;
 }
 
@@ -53,11 +53,11 @@ ASTNode* create_assign_node(char* id, ASTNode* value) {
     ASTNode* node = malloc(sizeof(ASTNode));
     node->type = NODE_ASSIGN;
     node->str_value = strdup(id);
-    node->binop.left = value; // Reuse binop struct for assignment
+    node->binop.left = value;
     return node;
 }
 
-ASTNode* create_binop_node(char op, ASTNode* left, ASTNode* right) {
+ASTNode* create_binop_node(Operator op, ASTNode* left, ASTNode* right) {
     ASTNode* node = malloc(sizeof(ASTNode));
     node->type = NODE_BINOP;
     node->binop.op = op;
@@ -66,7 +66,6 @@ ASTNode* create_binop_node(char op, ASTNode* left, ASTNode* right) {
     return node;
 }
 
-// Creates a compound node with a first statement and optionally a pointer to the next statement.
 ASTNode* create_compound_node(ASTNode* stmt, ASTNode* next) {
     ASTNode* node = malloc(sizeof(ASTNode));
     node->type = NODE_COMPOUND;
@@ -75,12 +74,9 @@ ASTNode* create_compound_node(ASTNode* stmt, ASTNode* next) {
     return node;
 }
 
-// Appends a statement to an existing compound node.
-// If compound is NULL, the function simply returns the new statement.
 ASTNode* append_statement(ASTNode* compound, ASTNode* stmt) {
     if (!compound) return stmt;
 
-    // Traverse to the last statement in the compound list.
     ASTNode* current = compound;
     while (current->binop.right != NULL) {
         current = current->binop.right;
@@ -89,19 +85,61 @@ ASTNode* append_statement(ASTNode* compound, ASTNode* stmt) {
     return compound;
 }
 
-void print_ast(ASTNode *node, int indent) {
+ASTNode* create_unop_node(Operator op, ASTNode* operand) {
+
+  ASTNode* node = malloc(sizeof(ASTNode));
+  node->type = NODE_UNOP;
+  node->unop.op = op;
+  node->unop.operand = operand;
+  return node;
+}
+
+ASTNode* create_if_else_node(ASTNode* cond, ASTNode* if_body, ASTNode* else_body) {
+    
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = NODE_IF;
+    node->control.condition = cond;
+    node->control.if_body = if_body;
+    node->control.else_body = else_body;
+    return node;
+}
+
+void free_ast(ASTNode* node) {
+    
+    if (!node) return;
+    switch (node->type) {
+        case NODE_ASSIGN:
+            free(node->str_value);
+            free_ast(node->binop.left);
+            break;
+        case NODE_IDENT:
+        case NODE_STR:
+            free(node->str_value); break;
+        case NODE_BINOP:
+            free_ast(node->binop.left);
+            free_ast(node->binop.right); break;
+        case NODE_IF:
+            free_ast(node->control.condition);
+            free_ast(node->control.if_body);
+            free_ast(node->control.else_body); break;
+    }
+    free(node);
+}
+
+void print_ast(ASTNode* node, int indent) {
+    
     if (!node) return;
     for (int i = 0; i < indent; i++) printf("  ");
     
     switch (node->type) {
         case NODE_PRINT:
             printf("PRINT\n");
-            print_ast(node->control.body, indent + 1);
+            print_ast(node->print_expr.expr, indent + 1);
             break;
         case NODE_BINOP:
-            printf("BINOP(%c)\n", node->binop.op);
-            print_ast(node->binop.left, indent + 1);
-            print_ast(node->binop.right, indent + 1);
+            if (node->binop.op == '<') printf("BINOP(<<)\n");
+            else if (node->binop.op == '>') printf("BINOP(>>)\n");
+            else printf("BINOP(%c)\n", node->binop.op);
             break;
         case NODE_NUM:
             printf("NUM(%d)\n", node->num_value);
@@ -115,12 +153,18 @@ void print_ast(ASTNode *node, int indent) {
         case NODE_IF:
             printf("IF\n");
             print_ast(node->control.condition, indent + 1);
-            print_ast(node->control.body, indent + 1);
+            printf("%*sTHEN:\n", indent*2, "");
+            print_ast(node->control.if_body, indent + 1);
+            if(node->control.else_body) {
+                printf("%*sELSE:\n", indent*2, "");
+                print_ast(node->control.else_body, indent + 1);
+            }
             break;
         case NODE_WHILE:
             printf("WHILE\n");
             print_ast(node->control.condition, indent + 1);
-            print_ast(node->control.body, indent + 1);
+            printf("%*sBODY:\n", indent*2, "");
+            print_ast(node->control.loop_body, indent + 1);
             break;
         case NODE_ASSIGN:
             printf("ASSIGN(%s)\n", node->str_value);
@@ -130,6 +174,10 @@ void print_ast(ASTNode *node, int indent) {
             printf("COMPOUND\n");
             print_ast(node->binop.left, indent + 1);
             print_ast(node->binop.right, indent);
+            break;
+        case NODE_UNOP:
+            printf("UNOP(%c)\n", node->unop.op);
+            print_ast(node->unop.operand, indent + 1);
             break;
     }
 }

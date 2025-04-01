@@ -13,7 +13,7 @@ This project implements a compiler for a simple programming language, supporting
 ### Lexer
 - Recognizes keywords (`print`, `if`, `else`, `while`)
 - Identifiers, numbers, strings
-- Operators: `=`, `==`, `<`, `>`, `+`, `-`, `*`, `/`
+- Operators: `=`, `==`, `<`, `>`, `>>`, `<<`, `!`, `&`, `|`, `^`, `+`, `-`, `*`, `/`
 - Special characters: `;`, `(`, `)`, `{`, `}`
 - Ignores whitespace and C-style comments (`/* ... */`)
 
@@ -45,7 +45,7 @@ This project implements a compiler for a simple programming language, supporting
 
 ### Documentation
   - `README.md`: Project overview and usage guide.
-
+  - `LICENSE`: Contains the GNU General Public License (GPLv3).
 ## How to Build
 
 In order to build, you will need to install both **Bison** and **Flex**:
@@ -100,9 +100,11 @@ You can instead opt to build the project *manually*:
    Input:
       print "Hello, World!";
    Expected Output:
-      PRINT STRING("Hello, World!") SEMICOLON NEWLINE
+      PRINT STRING(Hello, World!) SEMICOLON 
+
+      Abstract Syntax Tree:
       PRINT
-         STR("Hello, World!")
+         STR(Hello, World!)
    ```
 
 - **Error example:**
@@ -110,6 +112,7 @@ You can instead opt to build the project *manually*:
    Input:
       print "No Semicolon"
    Expected Output:
-      PRINT STRING("No Semicolon") NEWLINE
-      Parser Error: syntax error at line 3
+      Error: syntax error at line 1 (near 'end of input')
+      Syntax error: Missing semicolon at line 1
+      PRINT STRING(No semicolon) [ble: EOF]
    ```

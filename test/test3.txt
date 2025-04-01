@@ -1,1 +1,2 @@
+// this is a comment
 if (x == 10) print "x is 10";
