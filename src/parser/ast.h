@@ -60,6 +60,8 @@ ASTNode* append_statement(ASTNode* compound, ASTNode* stmt);
 ASTNode* create_unop_node(Operator op, ASTNode* operand);
 ASTNode* create_if_else_node(ASTNode* cond, ASTNode* if_body, ASTNode* else_body);
 
+const char* operator_to_string(Operator op);
+
 void print_ast(ASTNode* node, int indent);
 void free_ast(ASTNode* node);
 

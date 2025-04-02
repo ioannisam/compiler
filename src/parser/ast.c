@@ -114,16 +114,38 @@ void free_ast(ASTNode* node) {
             break;
         case NODE_IDENT:
         case NODE_STR:
-            free(node->str_value); break;
+            free(node->str_value); 
+            break;
         case NODE_BINOP:
             free_ast(node->binop.left);
-            free_ast(node->binop.right); break;
+            free_ast(node->binop.right); 
+            break;
         case NODE_IF:
             free_ast(node->control.condition);
             free_ast(node->control.if_body);
-            free_ast(node->control.else_body); break;
+            free_ast(node->control.else_body); 
+            break;
     }
     free(node);
+}
+
+const char* operator_to_string(Operator op) {
+    switch (op) {
+        case OP_EQ:      return "EQ";
+        case OP_LT:      return "LT";
+        case OP_GT:      return "GT";
+        case OP_AND:     return "AND";
+        case OP_OR:      return "OR";
+        case OP_XOR:     return "XOR";
+        case OP_NOT:     return "NOT";
+        case OP_LSHIFT:  return "LSHIFT";
+        case OP_RSHIFT:  return "RSHIFT";
+        case OP_ADD:     return "ADD";
+        case OP_SUB:     return "SUB";
+        case OP_MUL:     return "MUL";
+        case OP_DIV:     return "DIV";
+        default:         return "UNKNOWN";
+    }
 }
 
 void print_ast(ASTNode* node, int indent) {
@@ -137,9 +159,9 @@ void print_ast(ASTNode* node, int indent) {
             print_ast(node->print_expr.expr, indent + 1);
             break;
         case NODE_BINOP:
-            if (node->binop.op == '<') printf("BINOP(<<)\n");
-            else if (node->binop.op == '>') printf("BINOP(>>)\n");
-            else printf("BINOP(%c)\n", node->binop.op);
+            printf("BINOP(%s)\n", operator_to_string(node->binop.op));
+            print_ast(node->binop.left, indent + 1);
+            print_ast(node->binop.right, indent + 1);
             break;
         case NODE_NUM:
             printf("NUM(%d)\n", node->num_value);
@@ -176,7 +198,7 @@ void print_ast(ASTNode* node, int indent) {
             print_ast(node->binop.right, indent);
             break;
         case NODE_UNOP:
-            printf("UNOP(%c)\n", node->unop.op);
+            printf("UNOP(%s)\n", operator_to_string(node->unop.op));
             print_ast(node->unop.operand, indent + 1);
             break;
     }

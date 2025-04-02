@@ -19,6 +19,7 @@ int parse_errors = 0;
     char* str;
 }
 
+%token ERROR
 %token PRINT IF ELSE WHILE 
 %token NUMBER IDENTIFIER STRING
 %token ASSIGN EQ LT GT AND OR XOR NOT LSHIFT RSHIFT PLUS MINUS MULT DIV 
@@ -48,9 +49,7 @@ program:
 
 statements:
     /* empty */ { $$ = NULL; }
-    | statement 
-    | statements NEWLINE 
-    | statements NEWLINE statement { $$ = append_statement($1, $3); }
+    | statements statement { $$ = append_statement($1, $2); }
     ;
 
 block: LBRACE statements RBRACE { 
@@ -65,18 +64,9 @@ statement:
     | IF LPAREN expression RPAREN block { $$ = create_if_node($3, $5); }
     | IF LPAREN expression RPAREN block ELSE block { $$ = create_if_else_node($3, $5, $7); }
     | WHILE LPAREN expression RPAREN block { $$ = create_while_node($3, $5); }
-    | error SEMICOLON 
-        { 
-            fprintf(stderr, "Syntax error near line %d\n", yylineno); 
-            yyerrok;
-            $$ = NULL; 
-        }
-    | error
-        {
-            fprintf(stderr, "Syntax error: Missing semicolon at line %d\n", yylineno);
-            yyerrok;
-            $$ = NULL;
-        }
+    | error SEMICOLON   { yyerrok; yyclearin;}
+    | error NEWLINE     { yyerrok; yyclearin;}
+    | error             { yyerrok; yyclearin; YYABORT;}
     ;
 
 expression:
@@ -99,9 +89,13 @@ expression:
 %%
 
 int yyerror(char* msg) {
+
+    // only show first error
+    static int error_count = 0;
+    if (error_count++ >= 1) return 1; 
+    
     extern char* yytext;
-    parse_errors++;  // track errors
-    fprintf(stderr, "Error: %s at line %d (near '%s')\n", 
+    fprintf(stderr, "Syntax error: %s at line %d (near '%s')\n",
             msg, yylineno, yytext[0] ? yytext : "end of input");
     return 1;
 }

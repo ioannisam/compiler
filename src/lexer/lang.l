@@ -11,6 +11,7 @@ extern int yylineno;  // line tracking
 %%
 [ \t\r]+   ; // ignore whitespace
 "//".*     ; // ignore comments
+\n         { printf("NEWLINE\n"); }
 
 "print"    { printf("PRINT "); return PRINT; }
 "if"       { printf("IF "); return IF; }
@@ -51,12 +52,11 @@ extern int yylineno;  // line tracking
 
 ";"        { printf("SEMICOLON "); return SEMICOLON; }
 
-\n         { 
-    printf("NEWLINE\n"); 
-    return NEWLINE; 
-}
 
-.          { printf("UNKNOWN(%s) ", yytext); return yytext[0]; }
+.          { 
+    fprintf(stderr, "Error: Invalid character '%s' at line %d\n", yytext, yylineno);
+    return ERROR; 
+}
 %% // end of rules
 
 int yywrap() { return 1; } // or include -lfl flag at compilation
