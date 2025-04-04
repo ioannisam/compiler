@@ -2,14 +2,14 @@
 
 generate() {
     echo "Generating files..."
-    bison -d -o src/parser/parser.tab.c src/parser/parser.y 
+    bison -d -o src/parser/parser.tab.c --header=include/parser.tab.h src/parser/parser.y
     flex -o src/lexer/lex.yy.c src/lexer/lang.l
 }
 
 compile() {
     generate
     echo "Compiling executable..."
-    gcc -o bin/compiler src/lexer/lex.yy.c src/parser/parser.tab.c src/parser/ast.c -lfl
+    gcc -o bin/compiler -Iinclude src/lexer/lex.yy.c src/parser/parser.tab.c src/parser/ast.c -lfl
 }
 
 run() {
@@ -28,7 +28,7 @@ example() {
 
 clean() {
     echo "Cleaning up generated files..."
-    rm -f src/parser/parser.tab.c src/parser/parser.tab.h
+    rm -f src/parser/parser.tab.c include/parser.tab.h
     rm -f src/lexer/lex.yy.c 
     rm -f bin/* 
 }

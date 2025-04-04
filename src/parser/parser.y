@@ -1,3 +1,7 @@
+%code requires {
+    #include "ast.h"
+}
+
 %{
 #include "ast.h"
 

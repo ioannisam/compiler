@@ -1,5 +1,5 @@
-parser.tab.c
-parser.tab.h
-lex.yy.c
+src/parser/parser.tab.c
+include/parser.tab.h
+scr/lexer/lex.yy.c
 bin/compiler
 TODO.txt

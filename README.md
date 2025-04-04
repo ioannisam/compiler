@@ -75,7 +75,7 @@ You can instead opt to build the project *manually*:
 
 1. Generate parser files:
    ```bash
-   bison -d -o src/parser/parser.tab.c src/parser/parser.y
+   bison -d -o src/parser/parser.tab.c --header=include/parser.tab.h src/parser/parser.y
    ```
 2. Generate lexer file:
    ```bash
@@ -83,7 +83,7 @@ You can instead opt to build the project *manually*:
    ```
 3. Compile executable `compiler`:
    ```bash
-   gcc -o bin/compiler src/lexer/lex.yy.c src/parser/parser.tab.c src/parser/ast.c -lfl
+   gcc -o bin/compiler -Iinclude src/lexer/lex.yy.c src/parser/parser.tab.c src/parser/ast.c -lfl
    ```
 4. Run executable `compiler`:
    ```bash

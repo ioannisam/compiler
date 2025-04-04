@@ -1,6 +1,6 @@
 %{
-#include "../parser/ast.h"
-#include "../parser/parser.tab.h"
+#include "parser.tab.h"
+#include "ast.h"
 
 #include <stdio.h>
 extern int yylineno;  // line tracking
