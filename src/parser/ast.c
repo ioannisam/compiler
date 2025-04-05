@@ -105,6 +105,16 @@ ASTNode* create_if_else_node(ASTNode* cond, ASTNode* if_body, ASTNode* else_body
     return node;
 }
 
+ASTNode* create_empty_node(void) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed for empty node\n");
+        exit(EXIT_FAILURE);
+    }
+    node->type = NODE_EMPTY;
+    return node;
+}
+
 void free_ast(ASTNode* node) {
     
     if (!node) return;
@@ -201,6 +211,9 @@ void print_ast(ASTNode* node, int indent) {
         case NODE_UNOP:
             printf("UNOP(%s)\n", operator_to_string(node->unop.op));
             print_ast(node->unop.operand, indent + 1);
+            break;
+        case NODE_EMPTY:
+            printf("EMPTY\n");
             break;
     }
 }

@@ -12,7 +12,8 @@ typedef enum {
     NODE_NUM,
     NODE_STR,
     NODE_COMPOUND,
-    NODE_UNOP
+    NODE_UNOP,
+    NODE_EMPTY
 } NodeType;
 
 typedef enum {
@@ -59,6 +60,7 @@ ASTNode* create_compound_node(ASTNode* stmt, ASTNode* next);
 ASTNode* append_statement(ASTNode* compound, ASTNode* stmt);
 ASTNode* create_unop_node(Operator op, ASTNode* operand);
 ASTNode* create_if_else_node(ASTNode* cond, ASTNode* if_body, ASTNode* else_body);
+ASTNode* create_empty_node(void);
 
 const char* operator_to_string(Operator op);
 

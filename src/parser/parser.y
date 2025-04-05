@@ -4,13 +4,13 @@
 
 %{
 #include "ast.h"
-
 #include <stdio.h>
 #include <stddef.h>
 
 extern FILE* yyin;
 extern int yyerror(char* msg);
 extern int yylex(void);
+extern char* yytext;
 extern int yylineno; 
 
 ASTNode* root = NULL;
@@ -52,13 +52,15 @@ program:
     ;
 
 statements:
-    /* empty */ { $$ = NULL; }
+      /* empty */ { $$ = NULL; }
     | statements statement { $$ = append_statement($1, $2); }
     ;
 
-block: LBRACE statements RBRACE { 
-    $$ = $2 ? $2 : create_compound_node(NULL, NULL); 
-};
+block: 
+    LBRACE statements RBRACE { 
+        $$ = $2 ? $2 : create_compound_node(NULL, NULL); 
+    }
+    ;
 
 statement:
       PRINT expression SEMICOLON { $$ = create_print_node($2); }
@@ -68,9 +70,11 @@ statement:
     | IF LPAREN expression RPAREN block { $$ = create_if_node($3, $5); }
     | IF LPAREN expression RPAREN block ELSE block { $$ = create_if_else_node($3, $5, $7); }
     | WHILE LPAREN expression RPAREN block { $$ = create_while_node($3, $5); }
-    | error SEMICOLON   { yyerrok; yyclearin;}
-    | error NEWLINE     { yyerrok; yyclearin;}
-    | error             { yyerrok; yyclearin; YYABORT;}
+    | error SEMICOLON { 
+          yyerrok; 
+          yyclearin; 
+          $$ = create_empty_node();
+      }
     ;
 
 expression:
@@ -89,24 +93,22 @@ expression:
     | NUMBER { $$ = create_num_node($1); }
     | STRING { $$ = create_str_node($1); }
     ;
-
 %%
 
 int yyerror(char* msg) {
 
-    // only show first error
-    static int error_count = 0;
-    if (error_count++ >= 1) return 1; 
-    
-    extern char* yytext;
-    fprintf(stderr, "Syntax error: %s at line %d (near '%s')\n",
-            msg, yylineno, yytext[0] ? yytext : "end of input");
+    const char* token = (yytext && yytext[0]) ? yytext : "end of input";
+    fprintf(stderr, "Syntax error at line %d: %s (near '%s')\n", yylineno, msg, token);
+    parse_errors++;
     return 1;
 }
 
 int main(int argc, char* argv[]) {
-    
-    if (argc < 2) {
+
+    if (argc > 2) {
+        fprintf(stderr, "Usage: %s [input_file]\n", argv[0]);
+        return 1;
+    } else if (argc < 2) {
         fprintf(stderr, "No input file provided. Defaulting to /dev/stdin.\n");
         yyin = fopen("/dev/stdin", "r");
     } else {
@@ -121,9 +123,8 @@ int main(int argc, char* argv[]) {
     int parse_result = yyparse();
     fclose(yyin);
     if (parse_result == 0 && root != NULL && parse_errors == 0) {
-        printf("\n\nAbstract Syntax Tree:\n");
+        printf("\nAbstract Syntax Tree:\n");
         print_ast(root, 0);
     }
-
     return parse_result;
 }

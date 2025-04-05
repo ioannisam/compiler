@@ -112,6 +112,6 @@ You can instead opt to build the project *manually*:
    Input:
       print "No Semicolon"
    Expected Output:
-      Syntax error: syntax error at line 1 (near 'end of input')
+      Syntax error at line 1: syntax error (near 'end of input')
       PRINT STRING(No semicolon) [ble: EOF]
    ```
