@@ -76,13 +76,24 @@ ASTNode* create_compound_node(ASTNode* stmt, ASTNode* next) {
 }
 
 ASTNode* append_statement(ASTNode* compound, ASTNode* stmt) {
-    if (!compound) return stmt;
+
+    if (!compound) {
+        return create_compound_node(stmt, NULL);
+    }
 
     ASTNode* current = compound;
-    while (current->binop.right != NULL) {
+    while (current->type == NODE_COMPOUND && current->binop.right != NULL) {
         current = current->binop.right;
     }
-    current->binop.right = stmt;
+
+    if (current->type == NODE_COMPOUND) {
+        current->binop.right = create_compound_node(stmt, NULL);
+    } else {
+        // handle error or wrap existing node
+        ASTNode* new_compound = create_compound_node(current, create_compound_node(stmt, NULL));
+        compound = new_compound;
+    }
+
     return compound;
 }
 
@@ -116,7 +127,6 @@ ASTNode* create_empty_node(void) {
 }
 
 void free_ast(ASTNode* node) {
-    
     if (!node) return;
     switch (node->type) {
         case NODE_ASSIGN:
@@ -134,7 +144,23 @@ void free_ast(ASTNode* node) {
         case NODE_IF:
             free_ast(node->control.condition);
             free_ast(node->control.if_body);
-            free_ast(node->control.else_body); 
+            free_ast(node->control.else_body);
+            break;
+        case NODE_WHILE:
+            free_ast(node->control.condition);
+            free_ast(node->control.loop_body);
+            break;
+        case NODE_PRINT:
+            free_ast(node->print_expr.expr);
+            break;
+        case NODE_COMPOUND:
+            free_ast(node->binop.left);
+            free_ast(node->binop.right);
+            break;
+        case NODE_UNOP:
+            free_ast(node->unop.operand);
+            break;
+        case NODE_EMPTY:
             break;
     }
     free(node);

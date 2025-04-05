@@ -4,8 +4,12 @@
 
 %{
 #include "ast.h"
+#include "codegen.h"
+
 #include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
 extern FILE* yyin;
 extern int yyerror(char* msg);
@@ -109,7 +113,7 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Usage: %s [input_file]\n", argv[0]);
         return 1;
     } else if (argc < 2) {
-        fprintf(stderr, "No input file provided. Defaulting to /dev/stdin.\n");
+        fprintf(stderr, "No input file provided. Defaulting to /dev/stdin.\nEnter input (press Ctrl+D when done): ");
         yyin = fopen("/dev/stdin", "r");
     } else {
         yyin = fopen(argv[1], "r");
@@ -122,9 +126,15 @@ int main(int argc, char* argv[]) {
 
     int parse_result = yyparse();
     fclose(yyin);
-    if (parse_result == 0 && root != NULL && parse_errors == 0) {
-        printf("\nAbstract Syntax Tree:\n");
-        print_ast(root, 0);
+
+    if (parse_result != 0) {
+        fprintf(stderr, "Parsing failed with %d errors.\n", parse_errors);
+        return 1;
     }
-    return parse_result;
+
+    generate_code_to_file(root);
+
+    free_ast(root);
+
+    return 0;
 }
