@@ -16,8 +16,8 @@ ASTNode* create_print_node(ASTNode *expr) {
     return node;
 }
 
-ASTNode* create_str_node(char *str) {
-    ASTNode *node = malloc(sizeof(ASTNode));
+ASTNode* create_str_node(char* str) {
+    ASTNode* node = malloc(sizeof(ASTNode));
     if (!node) {
         fprintf(stderr, "Memory allocation failed in create_str_node\n");
         exit(EXIT_FAILURE);
@@ -27,8 +27,8 @@ ASTNode* create_str_node(char *str) {
     return node;
 }
 
-ASTNode* create_ident_node(char *id) {
-    ASTNode *node = malloc(sizeof(ASTNode));
+ASTNode* create_ident_node(char* id) {
+    ASTNode* node = malloc(sizeof(ASTNode));
     if (!node) {
         fprintf(stderr, "Memory allocation failed in create_ident_node\n");
         exit(EXIT_FAILURE);
@@ -39,7 +39,7 @@ ASTNode* create_ident_node(char *id) {
 }
 
 ASTNode* create_num_node(int value) {
-    ASTNode *node = malloc(sizeof(ASTNode));
+    ASTNode* node = malloc(sizeof(ASTNode));
     if (!node) {
         fprintf(stderr, "Memory allocation failed in create_num_node\n");
         exit(EXIT_FAILURE);
@@ -229,12 +229,12 @@ void print_ast(ASTNode* node, int indent) {
     switch (node->type) {
         case NODE_PRINT:
             printf("PRINT\n");
-            print_ast(node->print_expr.expr, indent + 1);
+            print_ast(node->print_expr.expr, indent+1);
             break;
         case NODE_BINOP:
             printf("BINOP(%s)\n", operator_to_string(node->binop.op));
-            print_ast(node->binop.left, indent + 1);
-            print_ast(node->binop.right, indent + 1);
+            print_ast(node->binop.left, indent+1);
+            print_ast(node->binop.right, indent+1);
             break;
         case NODE_NUM:
             printf("NUM(%d)\n", node->num_value);
@@ -247,36 +247,36 @@ void print_ast(ASTNode* node, int indent) {
             break;
         case NODE_IF:
             printf("IF\n");
-            print_ast(node->control.condition, indent + 1);
+            print_ast(node->control.condition, indent+1);
             printf("%*sTHEN:\n", indent*2, "");
-            print_ast(node->control.if_body, indent + 1);
+            print_ast(node->control.if_body, indent+1);
             if (node->control.else_body) {
                 printf("%*sELSE:\n", indent*2, "");
-                print_ast(node->control.else_body, indent + 1);
+                print_ast(node->control.else_body, indent+1);
             }
             break;
         case NODE_WHILE:
             printf("WHILE\n");
-            print_ast(node->control.condition, indent + 1);
+            print_ast(node->control.condition, indent+1);
             printf("%*sBODY:\n", indent*2, "");
-            print_ast(node->control.loop_body, indent + 1);
+            print_ast(node->control.loop_body, indent+1);
             break;
         case NODE_ASSIGN:
             printf("ASSIGN\n");
             // For assignment, print both the left-hand side (target) and the right-hand side (expression)
             printf("%*sLHS:\n", indent*2, "");
-            print_ast(node->binop.left, indent + 1);
+            print_ast(node->binop.left, indent+1);
             printf("%*sRHS:\n", indent*2, "");
-            print_ast(node->binop.right, indent + 1);
+            print_ast(node->binop.right, indent+1);
             break;
         case NODE_COMPOUND:
             printf("COMPOUND\n");
-            print_ast(node->binop.left, indent + 1);
+            print_ast(node->binop.left, indent+1);
             print_ast(node->binop.right, indent);
             break;
         case NODE_UNOP:
             printf("UNOP(%s)\n", operator_to_string(node->unop.op));
-            print_ast(node->unop.operand, indent + 1);
+            print_ast(node->unop.operand, indent+1);
             break;
         case NODE_EMPTY:
             printf("EMPTY\n");

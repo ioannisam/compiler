@@ -40,7 +40,6 @@ This project implements a `compiler` for a simple programming language, supporti
 ### Core Components
 - `src/parser/parser.y`: Bison parser definition (grammar rules)
 - `src/lexer/lang.l`: Flex lexer definition (token rules)
-- `include/ast.h`: AST node declarations (types, structures, and utilities)
 - `src/parser/ast.c`: AST implementation (node constructors and traversal logic)
 - `src/codegen/codegen.c`: Code generation implementation (writes assembly code)
 
@@ -65,7 +64,7 @@ This project implements a `compiler` for a simple programming language, supporti
 
 You will need to install the following tools:
 ```bash
-sudo pacman -S bison flex nasm gcc
+sudo pacman -S bison flex gcc nasm
 ```
 *(Or use the package manager specific to your Operating System.)*
 
@@ -86,7 +85,7 @@ Use the provided build script (`utils.sh` located at the project root) to automa
 
 #### Example:
 ```bash
-./utils.sh build
+./utils.sh build <input_file>
 ./utils.sh binary
 ```
 
@@ -94,7 +93,7 @@ Use the provided build script (`utils.sh` located at the project root) to automa
 
 1. Generate parser files:
    ```bash
-   bison -d -o src/parser/parser.tab.c --header=include/parser.tab.h src/parser/parser.y
+   bison -d -o src/parser/parser.tab.c --header=include/parser/parser.tab.h src/parser/parser.y
    ```
 2. Generate lexer file:
    ```bash
@@ -102,7 +101,15 @@ Use the provided build script (`utils.sh` located at the project root) to automa
    ```
 3. Compile the compiler executable:
    ```bash
-   gcc -o bin/compiler -Iinclude src/lexer/lex.yy.c src/parser/parser.tab.c src/parser/ast.c src/codegen/codegen.c src/codegen/symbol.c -lfl
+   gcc -o bin/compiler -Iinclude \
+        src/lexer/lex.yy.c       \
+        src/parser/parser.tab.c  \
+        src/parser/ast.c         \
+        src/codegen/codegen.c    \
+        src/codegen/handlers.c   \
+        src/codegen/helpers.c    \
+        src/codegen/symbol.c     \
+        -lfl
    ```
 4. Run the compiler to generate assembly:
    ```bash

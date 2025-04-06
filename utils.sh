@@ -10,7 +10,15 @@ compile() {
     generate
     echo "Compiling the compiler executable..."
     mkdir -p bin
-    gcc -o bin/compiler -Iinclude src/lexer/lex.yy.c src/parser/parser.tab.c src/parser/ast.c src/codegen/codegen.c src/codegen/symbol.c -lfl
+    gcc -o bin/compiler -Iinclude \
+        src/lexer/lex.yy.c        \
+        src/parser/parser.tab.c   \
+        src/parser/ast.c          \
+        src/codegen/codegen.c     \
+        src/codegen/handlers.c    \
+        src/codegen/helpers.c     \
+        src/codegen/symbol.c      \
+        -lfl
 }
 
 run() {
