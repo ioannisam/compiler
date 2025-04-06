@@ -1,0 +1,3 @@
+x = 10+2*4;
+print "x is: ";
+print x;

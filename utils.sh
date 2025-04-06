@@ -2,7 +2,7 @@
 
 generate() {
     echo "Generating parser and lexer files..."
-    bison -d -o src/parser/parser.tab.c --header=include/parser.tab.h src/parser/parser.y
+    bison -d -o src/parser/parser.tab.c --header=include/parser/parser.tab.h src/parser/parser.y
     flex -o src/lexer/lex.yy.c src/lexer/lang.l
 }
 
@@ -10,7 +10,7 @@ compile() {
     generate
     echo "Compiling the compiler executable..."
     mkdir -p bin
-    gcc -o bin/compiler -Iinclude src/lexer/lex.yy.c src/parser/parser.tab.c src/parser/ast.c src/codegen/codegen.c -lfl
+    gcc -o bin/compiler -Iinclude src/lexer/lex.yy.c src/parser/parser.tab.c src/parser/ast.c src/codegen/codegen.c src/codegen/symbol.c -lfl
 }
 
 run() {
@@ -56,7 +56,7 @@ example() {
 
 clean() {
     echo "Cleaning up generated files and build artifacts..."
-    rm -f src/parser/parser.tab.c include/parser.tab.h
+    rm -f src/parser/parser.tab.c include/parser/parser.tab.h
     rm -f src/lexer/lex.yy.c 
     rm -rf bin
     rm -rf build

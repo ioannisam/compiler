@@ -1,7 +1,8 @@
 // codegen.h
 #ifndef CODEGEN_H
 #define CODEGEN_H
-#include "ast.h"
+#include "parser/ast.h"
+#include "codegen/symbol.h"
 #include <stdio.h>
 
 extern int msg_len;

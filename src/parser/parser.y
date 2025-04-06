@@ -1,10 +1,13 @@
+%define api.header.include {"parser/parser.tab.h"}
+
 %code requires {
-    #include "ast.h"
+    #include "parser/parser.tab.h"
+    #include "parser/ast.h"
 }
 
 %{
-#include "ast.h"
-#include "codegen.h"
+#include "parser/ast.h"
+#include "codegen/codegen.h"
 
 #include <stdio.h>
 #include <stddef.h>

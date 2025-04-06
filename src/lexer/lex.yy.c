@@ -502,8 +502,8 @@ int yy_flex_debug = 0;
 char *yytext;
 #line 1 "src/lexer/lang.l"
 #line 2 "src/lexer/lang.l"
-#include "parser.tab.h"
-#include "ast.h"
+#include "parser/parser.tab.h"
+#include "parser/ast.h"
 
 #include <stdio.h>
 extern int yylineno;  // line tracking

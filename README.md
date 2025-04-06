@@ -102,7 +102,7 @@ Use the provided build script (`utils.sh` located at the project root) to automa
    ```
 3. Compile the compiler executable:
    ```bash
-   gcc -o bin/compiler -Iinclude src/lexer/lex.yy.c src/parser/parser.tab.c src/parser/ast.c src/codegen/codegen.c -lfl
+   gcc -o bin/compiler -Iinclude src/lexer/lex.yy.c src/parser/parser.tab.c src/parser/ast.c src/codegen/codegen.c src/codegen/symbol.c -lfl
    ```
 4. Run the compiler to generate assembly:
    ```bash

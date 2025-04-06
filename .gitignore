@@ -1,3 +1,4 @@
+.vscode
 src/parser/parser.tab.c
 include/parser.tab.h
 scr/lexer/lex.yy.c

@@ -1,6 +1,5 @@
 // src/parser/ast.c
-#include "ast.h"
-
+#include "parser/ast.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +7,10 @@
 // implementations of AST constructors
 ASTNode* create_print_node(ASTNode *expr) {
     ASTNode *node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_print_node\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_PRINT;
     node->print_expr.expr = expr;
     return node;
@@ -15,6 +18,10 @@ ASTNode* create_print_node(ASTNode *expr) {
 
 ASTNode* create_str_node(char *str) {
     ASTNode *node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_str_node\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_STR;
     node->str_value = strdup(str);
     return node;
@@ -22,6 +29,10 @@ ASTNode* create_str_node(char *str) {
 
 ASTNode* create_ident_node(char *id) {
     ASTNode *node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_ident_node\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_IDENT;
     node->str_value = strdup(id);
     return node;
@@ -29,6 +40,10 @@ ASTNode* create_ident_node(char *id) {
 
 ASTNode* create_num_node(int value) {
     ASTNode *node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_num_node\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_NUM;
     node->num_value = value;
     return node;
@@ -36,14 +51,23 @@ ASTNode* create_num_node(int value) {
 
 ASTNode* create_if_node(ASTNode* cond, ASTNode* body) {
     ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_if_node\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_IF;
     node->control.condition = cond;
     node->control.if_body = body;
+    node->control.else_body = NULL;
     return node;
 }
 
 ASTNode* create_while_node(ASTNode* cond, ASTNode* body) {
     ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_while_node\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_WHILE;
     node->control.condition = cond;
     node->control.loop_body = body;
@@ -52,14 +76,22 @@ ASTNode* create_while_node(ASTNode* cond, ASTNode* body) {
 
 ASTNode* create_assign_node(char* id, ASTNode* value) {
     ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_assign_node\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_ASSIGN;
-    node->str_value = strdup(id);
-    node->binop.left = value;
+    node->binop.left = create_ident_node(id);
+    node->binop.right = value;
     return node;
 }
 
 ASTNode* create_binop_node(Operator op, ASTNode* left, ASTNode* right) {
     ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_binop_node\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_BINOP;
     node->binop.op = op;
     node->binop.left = left;
@@ -69,6 +101,10 @@ ASTNode* create_binop_node(Operator op, ASTNode* left, ASTNode* right) {
 
 ASTNode* create_compound_node(ASTNode* stmt, ASTNode* next) {
     ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_compound_node\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_COMPOUND;
     node->binop.left = stmt;
     node->binop.right = next;
@@ -76,16 +112,13 @@ ASTNode* create_compound_node(ASTNode* stmt, ASTNode* next) {
 }
 
 ASTNode* append_statement(ASTNode* compound, ASTNode* stmt) {
-
     if (!compound) {
         return create_compound_node(stmt, NULL);
     }
-
     ASTNode* current = compound;
     while (current->type == NODE_COMPOUND && current->binop.right != NULL) {
         current = current->binop.right;
     }
-
     if (current->type == NODE_COMPOUND) {
         current->binop.right = create_compound_node(stmt, NULL);
     } else {
@@ -93,22 +126,27 @@ ASTNode* append_statement(ASTNode* compound, ASTNode* stmt) {
         ASTNode* new_compound = create_compound_node(current, create_compound_node(stmt, NULL));
         compound = new_compound;
     }
-
     return compound;
 }
 
 ASTNode* create_unop_node(Operator op, ASTNode* operand) {
-
-  ASTNode* node = malloc(sizeof(ASTNode));
-  node->type = NODE_UNOP;
-  node->unop.op = op;
-  node->unop.operand = operand;
-  return node;
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_unop_node\n");
+        exit(EXIT_FAILURE);
+    }
+    node->type = NODE_UNOP;
+    node->unop.op = op;
+    node->unop.operand = operand;
+    return node;
 }
 
 ASTNode* create_if_else_node(ASTNode* cond, ASTNode* if_body, ASTNode* else_body) {
-    
     ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_if_else_node\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_IF;
     node->control.condition = cond;
     node->control.if_body = if_body;
@@ -130,16 +168,16 @@ void free_ast(ASTNode* node) {
     if (!node) return;
     switch (node->type) {
         case NODE_ASSIGN:
-            free(node->str_value);
             free_ast(node->binop.left);
+            free_ast(node->binop.right);
             break;
         case NODE_IDENT:
         case NODE_STR:
-            free(node->str_value); 
+            free(node->str_value);
             break;
         case NODE_BINOP:
             free_ast(node->binop.left);
-            free_ast(node->binop.right); 
+            free_ast(node->binop.right);
             break;
         case NODE_IF:
             free_ast(node->control.condition);
@@ -186,10 +224,8 @@ const char* operator_to_string(Operator op) {
 }
 
 void print_ast(ASTNode* node, int indent) {
-    
     if (!node) return;
     for (int i = 0; i < indent; i++) printf("  ");
-    
     switch (node->type) {
         case NODE_PRINT:
             printf("PRINT\n");
@@ -214,7 +250,7 @@ void print_ast(ASTNode* node, int indent) {
             print_ast(node->control.condition, indent + 1);
             printf("%*sTHEN:\n", indent*2, "");
             print_ast(node->control.if_body, indent + 1);
-            if(node->control.else_body) {
+            if (node->control.else_body) {
                 printf("%*sELSE:\n", indent*2, "");
                 print_ast(node->control.else_body, indent + 1);
             }
@@ -226,8 +262,12 @@ void print_ast(ASTNode* node, int indent) {
             print_ast(node->control.loop_body, indent + 1);
             break;
         case NODE_ASSIGN:
-            printf("ASSIGN(%s)\n", node->str_value);
+            printf("ASSIGN\n");
+            // For assignment, print both the left-hand side (target) and the right-hand side (expression)
+            printf("%*sLHS:\n", indent*2, "");
             print_ast(node->binop.left, indent + 1);
+            printf("%*sRHS:\n", indent*2, "");
+            print_ast(node->binop.right, indent + 1);
             break;
         case NODE_COMPOUND:
             printf("COMPOUND\n");

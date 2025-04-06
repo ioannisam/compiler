@@ -1,4 +1,4 @@
-// src/parser/ast.h
+// ast.h
 #ifndef AST_H
 #define AST_H
 
@@ -47,7 +47,6 @@ typedef struct ASTNode {
     };
 } ASTNode;
 
-// Constructor functions
 ASTNode* create_print_node(ASTNode* expr);
 ASTNode* create_if_node(ASTNode* cond, ASTNode* body);
 ASTNode* create_while_node(ASTNode* cond, ASTNode* body);
