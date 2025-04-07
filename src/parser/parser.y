@@ -30,20 +30,36 @@ int parse_errors = 0;
     char* str;
 }
 
+// tokens
 %token ERROR
 %token PRINT IF ELSE WHILE 
 %token NUMBER IDENTIFIER STRING
-%token ASSIGN EQ LT GT AND OR XOR NOT LSHIFT RSHIFT PLUS MINUS MULT DIV 
+%token ASSIGN 
+%token EQ LT GT NEQ LAND LOR LNOT
+%token BNOT BAND BOR BXOR BNAND BNOR BXNOR LSHIFT RSHIFT
+%token PLUS MINUS MULT DIV MOD
 %token SEMICOLON NEWLINE LPAREN RPAREN LBRACE RBRACE
 
-%right NOT
-%left AND
-%left OR XOR
-%left LSHIFT RSHIFT
-%left EQ LT GT
-%left PLUS MINUS
-%left MULT DIV
+// precedence
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 
+%right LNOT
+%left LAND
+%left LOR
+
+%right BNOT
+%left BAND BNAND
+%left BOR BNOR BXOR BXNOR
+%left LSHIFT RSHIFT
+
+%left EQ NEQ LT GT
+%left PLUS MINUS
+%left MULT DIV MOD
+
+%nonassoc UMINUS UPLUS
+
+// types
 %type <node> program statements statement expression block
 %type <str> IDENTIFIER STRING
 %type <num> NUMBER
@@ -70,36 +86,63 @@ block:
     ;
 
 statement:
-      PRINT expression SEMICOLON { $$ = create_print_node($2); }
-    | IF LPAREN expression RPAREN statement { $$ = create_if_node($3, $5); }
-    | WHILE LPAREN expression RPAREN statement { $$ = create_while_node($3, $5); }
-    | IDENTIFIER ASSIGN expression SEMICOLON { $$ = create_assign_node($1, $3); }
-    | IF LPAREN expression RPAREN block { $$ = create_if_node($3, $5); }
-    | IF LPAREN expression RPAREN block ELSE block { $$ = create_if_else_node($3, $5, $7); }
-    | WHILE LPAREN expression RPAREN block { $$ = create_while_node($3, $5); }
-    | error SEMICOLON { 
-          yyerrok; 
-          yyclearin; 
-          $$ = create_empty_node();
-      }
+      IDENTIFIER ASSIGN expression SEMICOLON
+          { $$ = create_assign_node($1, $3); }
+    | PRINT expression SEMICOLON
+          { $$ = create_print_node($2); }
+    | IF LPAREN expression RPAREN statement %prec LOWER_THAN_ELSE
+        { $$ = create_if_node($3, $5, NULL); }
+    | IF LPAREN expression RPAREN block %prec LOWER_THAN_ELSE
+        { $$ = create_if_node($3, $5, NULL); }
+    | IF LPAREN expression RPAREN statement ELSE statement
+        { $$ = create_if_node($3, $5, $7); }
+    | IF LPAREN expression RPAREN block ELSE statement
+        { $$ = create_if_node($3, $5, $7); }
+    | WHILE LPAREN expression RPAREN statement
+          { $$ = create_while_node($3, $5); }
+    | WHILE LPAREN expression RPAREN block
+          { $$ = create_while_node($3, $5); }
+    | error SEMICOLON
+          { yyerrok; yyclearin; $$ = create_empty_node(); }
     ;
 
 expression:
-      expression EQ    expression { $$ = create_binop_node(OP_EQ, $1, $3); }
-    | expression AND   expression { $$ = create_binop_node(OP_AND, $1, $3); }
-    | expression OR    expression { $$ = create_binop_node(OP_OR, $1, $3); }
-    | expression XOR   expression { $$ = create_binop_node(OP_XOR, $1, $3); }
-    |            NOT   expression { $$ = create_unop_node(OP_NOT, $2); }
+      LPAREN expression RPAREN { $$ = $2; }
+
+    | IDENTIFIER { $$ = create_ident_node($1); }
+    | NUMBER     { $$ = create_num_node($1); }
+    | STRING     { $$ = create_str_node($1); }
+
+    | MINUS expression %prec UMINUS { $$ = create_unop_node(OP_NEG, $2); }
+    | PLUS  expression %prec UPLUS  { $$ = create_unop_node(OP_POS, $2); }
+
+    | expression EQ     expression { $$ = create_binop_node(OP_EQ, $1, $3); }
+    | expression NEQ    expression { $$ = create_binop_node(OP_NEQ, $1, $3); }
+    | expression LT     expression { $$ = create_binop_node(OP_LT, $1, $3); }
+    | expression GT     expression { $$ = create_binop_node(OP_GT, $1, $3); }
+
+    | expression LAND   expression { $$ = create_binop_node(OP_LAND, $1, $3); }
+    | expression LOR    expression { $$ = create_binop_node(OP_LOR, $1, $3); }
+    |            LNOT   expression { $$ = create_unop_node(OP_LNOT, $2); }
+
+    |            BNOT   expression { $$ = create_unop_node(OP_BNOT, $2); }
+    | expression BAND   expression { $$ = create_binop_node(OP_BAND, $1, $3); }
+    | expression BOR    expression { $$ = create_binop_node(OP_BOR, $1, $3); }
+    | expression BXOR   expression { $$ = create_binop_node(OP_BXOR, $1, $3); }
+    | expression BNAND  expression { $$ = create_binop_node(OP_BNAND, $1, $3); }
+    | expression BNOR   expression { $$ = create_binop_node(OP_BNOR, $1, $3); }
+    | expression BXNOR  expression { $$ = create_binop_node(OP_BXNOR, $1, $3); }
+
     | expression LSHIFT expression { $$ = create_binop_node(OP_LSHIFT, $1, $3); }
     | expression RSHIFT expression { $$ = create_binop_node(OP_RSHIFT, $1, $3); }
-    | expression PLUS  expression { $$ = create_binop_node(OP_ADD, $1, $3); }
-    | expression MINUS expression { $$ = create_binop_node(OP_SUB, $1, $3); }
-    | expression MULT  expression { $$ = create_binop_node(OP_MUL, $1, $3); }
-    | expression DIV   expression { $$ = create_binop_node(OP_DIV, $1, $3); }
-    | IDENTIFIER { $$ = create_ident_node($1); }
-    | NUMBER { $$ = create_num_node($1); }
-    | STRING { $$ = create_str_node($1); }
+
+    | expression PLUS   expression { $$ = create_binop_node(OP_ADD, $1, $3); }
+    | expression MINUS  expression { $$ = create_binop_node(OP_SUB, $1, $3); }
+    | expression MULT   expression { $$ = create_binop_node(OP_MUL, $1, $3); }
+    | expression DIV    expression { $$ = create_binop_node(OP_DIV, $1, $3); }
+    | expression MOD    expression { $$ = create_binop_node(OP_MOD, $1, $3); }
     ;
+
 %%
 
 int yyerror(char* msg) {

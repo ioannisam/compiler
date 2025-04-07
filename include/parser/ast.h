@@ -1,4 +1,3 @@
-// ast.h
 #ifndef AST_H
 #define AST_H
 
@@ -17,8 +16,12 @@ typedef enum {
 } NodeType;
 
 typedef enum {
-    OP_EQ, OP_LT, OP_GT, OP_LSHIFT, OP_RSHIFT,
-    OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_AND, OP_OR, OP_XOR, OP_NOT
+    OP_POS, OP_NEG, 
+    OP_EQ, OP_NEQ, OP_LT, OP_GT,
+    OP_LAND, OP_LOR, OP_LNOT,
+    OP_BNOT, OP_BAND, OP_BOR, OP_BXOR, OP_BNAND, OP_BNOR, OP_BXNOR,
+    OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD,
+    OP_LSHIFT, OP_RSHIFT
 } Operator;
 
 typedef struct ASTNode {
@@ -48,7 +51,7 @@ typedef struct ASTNode {
 } ASTNode;
 
 ASTNode* create_print_node(ASTNode* expr);
-ASTNode* create_if_node(ASTNode* cond, ASTNode* body);
+ASTNode* create_if_node(ASTNode* cond, ASTNode* body, ASTNode* else_body);
 ASTNode* create_while_node(ASTNode* cond, ASTNode* body);
 ASTNode* create_assign_node(char* id, ASTNode* value);
 ASTNode* create_binop_node(Operator op, ASTNode* left, ASTNode* right);

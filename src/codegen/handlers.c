@@ -34,7 +34,7 @@ void handle_print(ASTNode* node, FILE* output) {
         generate_code(expr, output);
         fprintf(output,
             "    push rax\n    push rbx\n    push rcx\n    push rdx\n    push rdi\n    push rsi\n"
-            "    mov rdi, rax          ; number to convert\n"
+            "    mov rdi, rax          ; number to convert (signed)\n"
             "    mov rsi, print_buffer ; buffer address\n"
             "    call itoa\n"
             "    mov rsi, print_buffer\n"
@@ -61,10 +61,13 @@ void handle_assign(ASTNode* node, FILE* output) {
 }
 
 void handle_binop(ASTNode* node, FILE* output) {
+    
     generate_code(node->binop.left, output);
     fprintf(output, "    push rax\n");
+    
     generate_code(node->binop.right, output);
     fprintf(output, "    pop rbx\n");
+
     switch (node->binop.op) {
         case OP_ADD:
             fprintf(output, "    add rax, rbx\n");
@@ -77,11 +80,121 @@ void handle_binop(ASTNode* node, FILE* output) {
             fprintf(output, "    imul rax, rbx\n");
             break;
         case OP_DIV:
-            fprintf(output, "    xor rdx, rdx\n");
-            fprintf(output, "    idiv rbx\n");
+            fprintf(output, "    xchg rax, rbx\n"); // Now RAX = left, RBX = right
+            fprintf(output, "    cqo\n");            // Sign-extend RAX into RDX for idiv
+            fprintf(output, "    idiv rbx\n");         // RAX = left / right (signed)
+            break;
+        case OP_MOD:
+            fprintf(output, "    mov rcx, rax      ; Save right value\n");
+            fprintf(output, "    mov rax, rbx      ; Move left operand into rax\n");
+            fprintf(output, "    mov rbx, rcx      ; Move right operand into rbx\n");
+            fprintf(output, "    cqo               ; Sign-extend rax into rdx\n");
+            fprintf(output, "    idiv rbx          ; Signed division; remainder in rdx\n");
+            fprintf(output, "    mov rax, rdx      ; Move remainder to rax\n");
+            break;
+        case OP_EQ:
+            fprintf(output, "    cmp rbx, rax\n");
+            fprintf(output, "    sete al\n");
+            fprintf(output, "    movzx rax, al\n");
+            break;
+        case OP_NEQ:
+            fprintf(output, "    cmp rbx, rax\n");
+            fprintf(output, "    setne al\n");
+            fprintf(output, "    movzx rax, al\n");
+            break;
+        case OP_LT:
+            fprintf(output, "    cmp rbx, rax\n");
+            fprintf(output, "    setl al\n");
+            fprintf(output, "    movzx rax, al\n");
+            break;
+        case OP_GT:
+            fprintf(output, "    cmp rbx, rax\n");
+            fprintf(output, "    setg al\n");
+            fprintf(output, "    movzx rax, al\n");
+            break;
+        case OP_LAND:
+            generate_code(node->binop.left, output);
+            fprintf(output, "    cmp rax, 0\n");
+            fprintf(output, "    setne al\n");
+            fprintf(output, "    movzx rax, al\n");
+            fprintf(output, "    push rax\n");
+
+            generate_code(node->binop.right, output);
+            fprintf(output, "    cmp rax, 0\n");
+            fprintf(output, "    setne al\n");
+            fprintf(output, "    movzx rax, al\n");
+
+            fprintf(output, "    pop rbx\n");
+            fprintf(output, "    and rax, rbx\n");
+            break;
+        case OP_LOR:
+            generate_code(node->binop.left, output);
+            fprintf(output, "    cmp rax, 0\n");
+            fprintf(output, "    setne al\n");
+            fprintf(output, "    movzx rax, al\n");
+            fprintf(output, "    push rax\n");
+
+            generate_code(node->binop.right, output);
+            fprintf(output, "    cmp rax, 0\n");
+            fprintf(output, "    setne al\n");
+            fprintf(output, "    movzx rax, al\n");
+
+            fprintf(output, "    pop rbx\n");
+            fprintf(output, "    or rax, rbx\n");
+            break;
+        case OP_BAND:
+            fprintf(output, "    and rax, rbx\n");
+            break;
+        case OP_BOR:
+            fprintf(output, "    or rax, rbx\n");
+            break;
+        case OP_BXOR:
+            fprintf(output, "    xor rax, rbx\n");
+            break;
+        case OP_LSHIFT:
+            fprintf(output, "    mov rcx, rax\n");
+            fprintf(output, "    mov rax, rbx\n");
+            fprintf(output, "    shl rax, cl\n");
+            break;
+        case OP_RSHIFT:
+            fprintf(output, "    mov rcx, rax\n");
+            fprintf(output, "    mov rax, rbx\n");
+            fprintf(output, "    sar rax, cl\n");  // Use arithmetic right shift for signed numbers
+            break;
+        case OP_BNAND:
+            fprintf(output, "    and rax, rbx\n");
+            fprintf(output, "    not rax\n");
+            break;
+        case OP_BNOR:
+            fprintf(output, "    or rax, rbx\n");
+            fprintf(output, "    not rax\n");
+            break;
+        case OP_BXNOR:
+            fprintf(output, "    xor rax, rbx\n");
+            fprintf(output, "    not rax\n");
             break;
         default:
             fprintf(output, "    ; unsupported operator\n");
+            break;
+    }
+}
+
+void handle_unop(ASTNode* node, FILE* output) {
+    generate_code(node->unop.operand, output);
+    switch (node->unop.op) {
+        case OP_LNOT:
+            fprintf(output, "    cmp rax, 0\n    sete al\n    movzx rax, al\n");
+            break;
+        case OP_BNOT:
+            fprintf(output, "    not rax\n");
+            break;
+        case OP_NEG:
+            fprintf(output, "    neg rax\n");
+            break;
+        case OP_POS:
+            break;
+        default:
+            fprintf(output, "    ; unsupported unary operator\n");
             break;
     }
 }

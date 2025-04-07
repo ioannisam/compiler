@@ -73,22 +73,33 @@ extern int yydebug;
     EQ = 267,                      /* EQ  */
     LT = 268,                      /* LT  */
     GT = 269,                      /* GT  */
-    AND = 270,                     /* AND  */
-    OR = 271,                      /* OR  */
-    XOR = 272,                     /* XOR  */
-    NOT = 273,                     /* NOT  */
-    LSHIFT = 274,                  /* LSHIFT  */
-    RSHIFT = 275,                  /* RSHIFT  */
-    PLUS = 276,                    /* PLUS  */
-    MINUS = 277,                   /* MINUS  */
-    MULT = 278,                    /* MULT  */
-    DIV = 279,                     /* DIV  */
-    SEMICOLON = 280,               /* SEMICOLON  */
-    NEWLINE = 281,                 /* NEWLINE  */
-    LPAREN = 282,                  /* LPAREN  */
-    RPAREN = 283,                  /* RPAREN  */
-    LBRACE = 284,                  /* LBRACE  */
-    RBRACE = 285                   /* RBRACE  */
+    NEQ = 270,                     /* NEQ  */
+    LAND = 271,                    /* LAND  */
+    LOR = 272,                     /* LOR  */
+    LNOT = 273,                    /* LNOT  */
+    BNOT = 274,                    /* BNOT  */
+    BAND = 275,                    /* BAND  */
+    BOR = 276,                     /* BOR  */
+    BXOR = 277,                    /* BXOR  */
+    BNAND = 278,                   /* BNAND  */
+    BNOR = 279,                    /* BNOR  */
+    BXNOR = 280,                   /* BXNOR  */
+    LSHIFT = 281,                  /* LSHIFT  */
+    RSHIFT = 282,                  /* RSHIFT  */
+    PLUS = 283,                    /* PLUS  */
+    MINUS = 284,                   /* MINUS  */
+    MULT = 285,                    /* MULT  */
+    DIV = 286,                     /* DIV  */
+    MOD = 287,                     /* MOD  */
+    SEMICOLON = 288,               /* SEMICOLON  */
+    NEWLINE = 289,                 /* NEWLINE  */
+    LPAREN = 290,                  /* LPAREN  */
+    RPAREN = 291,                  /* RPAREN  */
+    LBRACE = 292,                  /* LBRACE  */
+    RBRACE = 293,                  /* RBRACE  */
+    LOWER_THAN_ELSE = 294,         /* LOWER_THAN_ELSE  */
+    UMINUS = 295,                  /* UMINUS  */
+    UPLUS = 296                    /* UPLUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -103,7 +114,7 @@ union YYSTYPE
     int num;
     char* str;
 
-#line 107 "include/parser/parser.tab.h"
+#line 118 "include/parser/parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

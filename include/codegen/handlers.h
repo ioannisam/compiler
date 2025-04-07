@@ -8,6 +8,7 @@ void handle_assign(ASTNode* node, FILE* output);
 void handle_num(ASTNode* node, FILE* output);
 void handle_ident(ASTNode* node, FILE* output);
 void handle_binop(ASTNode* node, FILE* output);
+void handle_unop(ASTNode* node, FILE* output);
 void handle_compound(ASTNode* node, FILE* output);
 
 #endif

@@ -33,6 +33,10 @@ void generate_code(ASTNode* node, FILE* output) {
             handle_binop(node, output);
             break;
         }
+        case NODE_UNOP: {
+            handle_unop(node, output);
+            break;
+        }
         case NODE_COMPOUND:
             handle_compound(node, output);
             break;

@@ -1,5 +1,5 @@
-// src/parser/ast.c
 #include "parser/ast.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,7 +49,7 @@ ASTNode* create_num_node(int value) {
     return node;
 }
 
-ASTNode* create_if_node(ASTNode* cond, ASTNode* body) {
+ASTNode* create_if_node(ASTNode* cond, ASTNode* if_body, ASTNode* else_body) {
     ASTNode* node = malloc(sizeof(ASTNode));
     if (!node) {
         fprintf(stderr, "Memory allocation failed in create_if_node\n");
@@ -57,8 +57,8 @@ ASTNode* create_if_node(ASTNode* cond, ASTNode* body) {
     }
     node->type = NODE_IF;
     node->control.condition = cond;
-    node->control.if_body = body;
-    node->control.else_body = NULL;
+    node->control.if_body = if_body;
+    node->control.else_body = else_body;
     return node;
 }
 
@@ -141,19 +141,6 @@ ASTNode* create_unop_node(Operator op, ASTNode* operand) {
     return node;
 }
 
-ASTNode* create_if_else_node(ASTNode* cond, ASTNode* if_body, ASTNode* else_body) {
-    ASTNode* node = malloc(sizeof(ASTNode));
-    if (!node) {
-        fprintf(stderr, "Memory allocation failed in create_if_else_node\n");
-        exit(EXIT_FAILURE);
-    }
-    node->type = NODE_IF;
-    node->control.condition = cond;
-    node->control.if_body = if_body;
-    node->control.else_body = else_body;
-    return node;
-}
-
 ASTNode* create_empty_node(void) {
     ASTNode* node = malloc(sizeof(ASTNode));
     if (!node) {
@@ -206,20 +193,30 @@ void free_ast(ASTNode* node) {
 
 const char* operator_to_string(Operator op) {
     switch (op) {
-        case OP_EQ:      return "EQ";
-        case OP_LT:      return "LT";
-        case OP_GT:      return "GT";
-        case OP_AND:     return "AND";
-        case OP_OR:      return "OR";
-        case OP_XOR:     return "XOR";
-        case OP_NOT:     return "NOT";
-        case OP_LSHIFT:  return "LSHIFT";
-        case OP_RSHIFT:  return "RSHIFT";
-        case OP_ADD:     return "ADD";
-        case OP_SUB:     return "SUB";
-        case OP_MUL:     return "MUL";
-        case OP_DIV:     return "DIV";
-        default:         return "UNKNOWN";
+        case OP_POS:    return "POS";
+        case OP_NEG:    return "NEG";
+        case OP_LAND:   return "LAND";
+        case OP_LOR:    return "LOR";
+        case OP_LNOT:   return "LNOT";
+        case OP_BNOT:   return "BNOT";
+        case OP_BAND:   return "BAND";
+        case OP_BOR:    return "BOR";
+        case OP_BXOR:   return "BXOR";
+        case OP_BNAND:  return "BNAND";
+        case OP_BNOR:   return "BNOR";
+        case OP_BXNOR:  return "BXNOR";
+        case OP_EQ:     return "EQ";
+        case OP_NEQ:    return "NEQ";
+        case OP_LT:     return "LT";
+        case OP_GT:     return "GT";
+        case OP_ADD:    return "ADD";
+        case OP_SUB:    return "SUB";
+        case OP_MUL:    return "MUL";
+        case OP_DIV:    return "DIV";
+        case OP_MOD:    return "MOD";
+        case OP_LSHIFT: return "LSHIFT";
+        case OP_RSHIFT: return "RSHIFT";
+        default:        return "UNKNOWN";
     }
 }
 

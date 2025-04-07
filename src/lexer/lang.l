@@ -31,19 +31,30 @@ extern int yylineno;  // line tracking
 }
 
 "="        { printf("ASSIGN "); return ASSIGN; }
+"!="       { printf("NEQ "); return NEQ; }
 "=="       { printf("EQ "); return EQ; }
 "<"        { printf("LT "); return LT; }
 ">"        { printf("GT "); return GT; }
-"&"        { printf("AND "); return AND; }
-"|"        { printf("OR "); return OR; }
-"^"        { printf("XOR "); return XOR; }
-"!"        { printf("NOT "); return NOT; }
+"!"        { printf("LNOT "); return LNOT; }
+"&&"       { printf("LAND "); yylval.num = 0; return LAND; }
+"||"       { printf("LOR ");  yylval.num = 0; return LOR; }
+
+"~"        { printf("BNOT ");  return BNOT; }
+"&"        { printf("BAND "); return BAND; }
+"|"        { printf("BOR ");  return BOR; }
+"^"        { printf("BXOR "); return BXOR; }
+"~&"       { printf("BNAND "); return BNAND; }
+"~|"       { printf("BNOR ");  return BNOR; }
+"~^"       { printf("BXNOR "); return BXNOR; }
+
 "<<"       { printf("LSHIFT "); return LSHIFT; }
 ">>"       { printf("RSHIFT "); return RSHIFT; }
+
 "+"        { printf("PLUS "); return PLUS; }
 "-"        { printf("MINUS "); return MINUS; }
 "*"        { printf("MULT "); return MULT; }
 "/"        { printf("DIV "); return DIV; }
+"%"        { printf("MOD "); return MOD; }
 
 "("        { printf("LPAREN "); return LPAREN; }
 ")"        { printf("RPAREN "); return RPAREN; }
@@ -51,7 +62,6 @@ extern int yylineno;  // line tracking
 "}"        { printf("RBRACE "); return RBRACE; }
 
 ";"        { printf("SEMICOLON "); return SEMICOLON; }
-
 
 .          { 
     fprintf(stderr, "Error: Invalid character '%s' at line %d\n", yytext, yylineno);
