@@ -56,7 +56,7 @@ build() {
 example() {
     echo "Running the compiler with predifined example input..."
     compile
-    run test/test0.txt
+    run test/print.txt
     assemble
     link
     binary

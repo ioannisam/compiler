@@ -27,12 +27,10 @@ void generate_code(ASTNode* node, FILE* output) {
             handle_if(node, output);
             break;
         }
-        /*
         case NODE_WHILE: {
             handle_while(node, output);
             break;
         }
-        */
         case NODE_NUM:
             handle_num(node, output);
             break;

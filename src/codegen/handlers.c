@@ -19,7 +19,7 @@ void handle_ident(ASTNode* node, FILE* output) {
 }
 
 void handle_print(ASTNode* node, FILE* output) {
-    
+
     ASTNode* expr = node->print_expr.expr;
     if (expr->type == NODE_STR) {
         int len = (int)strlen(expr->str_value);
@@ -82,7 +82,19 @@ void handle_if(ASTNode* node, FILE* output) {
 }
 
 void handle_while(ASTNode* node, FILE* output) {
-    // Handle while statement
+    int current_label = code_label_counter;
+    code_label_counter += 2;  // We need two labels: loop start and loop end
+    
+    fprintf(output, ".Lwhile%d:\n", current_label);
+    generate_code(node->control.condition, output);
+    
+    fprintf(output, "    cmp rax, 0\n");
+    fprintf(output, "    je .Lend%d\n\n", current_label);
+    
+    generate_code(node->control.loop_body, output);
+    
+    fprintf(output, "    jmp .Lwhile%d\n", current_label);
+    fprintf(output, ".Lend%d:\n\n", current_label);
 }
 
 void handle_binop(ASTNode* node, FILE* output) {

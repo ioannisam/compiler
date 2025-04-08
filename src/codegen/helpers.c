@@ -26,7 +26,7 @@ void collect_print_messages(ASTNode* node, FILE* output) {
             }
             break;
         case NODE_WHILE:
-            // TODO
+            collect_print_messages(node->control.if_body, output);
             break;
 
     }
