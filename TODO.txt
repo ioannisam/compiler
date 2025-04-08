@@ -1,3 +1,2 @@
-- check operator precedence and correctness (fix UMINUS placement)
 - assembly: add more cases
 - review code

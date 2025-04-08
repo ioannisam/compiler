@@ -19,17 +19,19 @@ void handle_ident(ASTNode* node, FILE* output) {
 }
 
 void handle_print(ASTNode* node, FILE* output) {
-    ASTNode *expr = node->print_expr.expr;
+    
+    ASTNode* expr = node->print_expr.expr;
     if (expr->type == NODE_STR) {
         int len = (int)strlen(expr->str_value);
+        // Use global counter and don't increment it - we're referencing existing labels
+        static int msg_ref_counter = 0;
         fprintf(output,
             "    mov rax, 1         ; sys_write\n"
             "    mov rdi, 1         ; stdout\n"
             "    mov rsi, msg%d     ; message address\n"
             "    mov rdx, %d        ; message length\n"
             "    syscall\n",
-            code_label_counter, len + 1);
-        code_label_counter++;
+            msg_ref_counter++, len + 1);
     } else {
         generate_code(expr, output);
         fprintf(output,
@@ -60,6 +62,29 @@ void handle_assign(ASTNode* node, FILE* output) {
     }
 }
 
+void handle_if(ASTNode* node, FILE* output) {
+    int current_label = code_label_counter;
+    code_label_counter += 2;
+
+    generate_code(node->control.condition, output);
+    fprintf(output, "    cmp rax, 0\n");
+    fprintf(output, "    je .Lelse%d\n\n", current_label);
+
+    generate_code(node->control.if_body, output);
+    fprintf(output, "    jmp .Lend%d\n", current_label);
+
+    fprintf(output, ".Lelse%d:\n", current_label);
+    if (node->control.else_body) {
+        generate_code(node->control.else_body, output);
+    }
+
+    fprintf(output, ".Lend%d:\n\n", current_label);
+}
+
+void handle_while(ASTNode* node, FILE* output) {
+    // Handle while statement
+}
+
 void handle_binop(ASTNode* node, FILE* output) {
     
     generate_code(node->binop.left, output);
@@ -80,9 +105,9 @@ void handle_binop(ASTNode* node, FILE* output) {
             fprintf(output, "    imul rax, rbx\n");
             break;
         case OP_DIV:
-            fprintf(output, "    xchg rax, rbx\n"); // Now RAX = left, RBX = right
-            fprintf(output, "    cqo\n");            // Sign-extend RAX into RDX for idiv
-            fprintf(output, "    idiv rbx\n");         // RAX = left / right (signed)
+            fprintf(output, "    xchg rax, rbx\n");
+            fprintf(output, "    cqo\n");
+            fprintf(output, "    idiv rbx\n");
             break;
         case OP_MOD:
             fprintf(output, "    mov rcx, rax      ; Save right value\n");
@@ -159,7 +184,7 @@ void handle_binop(ASTNode* node, FILE* output) {
         case OP_RSHIFT:
             fprintf(output, "    mov rcx, rax\n");
             fprintf(output, "    mov rax, rbx\n");
-            fprintf(output, "    sar rax, cl\n");  // Use arithmetic right shift for signed numbers
+            fprintf(output, "    sar rax, cl\n");
             break;
         case OP_BNAND:
             fprintf(output, "    and rax, rbx\n");

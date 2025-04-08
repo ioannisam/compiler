@@ -87,23 +87,18 @@ block:
 
 statement:
       IDENTIFIER ASSIGN expression SEMICOLON
-          { $$ = create_assign_node($1, $3); }
+        { $$ = create_assign_node($1, $3); }
+    | block
     | PRINT expression SEMICOLON
-          { $$ = create_print_node($2); }
+        { $$ = create_print_node($2); }
     | IF LPAREN expression RPAREN statement %prec LOWER_THAN_ELSE
-        { $$ = create_if_node($3, $5, NULL); }
-    | IF LPAREN expression RPAREN block %prec LOWER_THAN_ELSE
         { $$ = create_if_node($3, $5, NULL); }
     | IF LPAREN expression RPAREN statement ELSE statement
         { $$ = create_if_node($3, $5, $7); }
-    | IF LPAREN expression RPAREN block ELSE statement
-        { $$ = create_if_node($3, $5, $7); }
     | WHILE LPAREN expression RPAREN statement
-          { $$ = create_while_node($3, $5); }
-    | WHILE LPAREN expression RPAREN block
-          { $$ = create_while_node($3, $5); }
+        { $$ = create_while_node($3, $5); }
     | error SEMICOLON
-          { yyerrok; yyclearin; $$ = create_empty_node(); }
+        { yyerrok; yyclearin; $$ = create_empty_node(); }
     ;
 
 expression:

@@ -6,13 +6,29 @@
 
 // Data Section Helpers
 void collect_print_messages(ASTNode* node, FILE* output) {
+
     if (!node) return;
-    if (node->type == NODE_PRINT && node->print_expr.expr->type == NODE_STR) {
-        fprintf(output, "msg%d db \"%s\", 0xA\n", data_label_counter++, node->print_expr.expr->str_value);
-    }
-    if (node->type == NODE_COMPOUND) {
-        collect_print_messages(node->binop.left, output);
-        collect_print_messages(node->binop.right, output);
+    switch (node->type) {
+        case NODE_PRINT:
+            if (node->print_expr.expr && node->print_expr.expr->type == NODE_STR) {
+                fprintf(output, "msg%d db \"%s\", 0xA\n", data_label_counter++, 
+                        node->print_expr.expr->str_value);
+            }
+            break;
+        case NODE_COMPOUND:
+            collect_print_messages(node->binop.left, output);
+            collect_print_messages(node->binop.right, output);
+            break;
+        case NODE_IF:
+            collect_print_messages(node->control.if_body, output);
+            if (node->control.else_body) {
+                collect_print_messages(node->control.else_body, output);
+            }
+            break;
+        case NODE_WHILE:
+            // TODO
+            break;
+
     }
 }
 
@@ -60,13 +76,12 @@ void emit_itoa(FILE* output) {
                     "    add rdi, 19           ; move to the end of the buffer\n"
                     "    mov rcx, 10           ; divisor for base 10\n"
                     "    mov rbx, 0            ; character count\n"
+                    "    xor r8, r8            ; flag for negative (0 = positive)\n"
                     "    test rax, rax         ; check if the number is negative\n"
-                    "    jns .itoa_positive    ; jump if the number is non-negative\n"
+                    "    jns .itoa_loop_start  ; jump if non-negative\n"
+                    "    mov r8, 1             ; set negative flag\n"
                     "    neg rax               ; make the number positive\n"
-                    "    dec rdi               ; move buffer pointer back\n"
-                    "    mov byte [rdi], '-'   ; store the negative sign\n"
-                    "    inc rbx               ; increment character count\n"
-                    ".itoa_positive:\n"
+                    ".itoa_loop_start:\n"
                     ".itoa_loop:\n"
                     "    xor rdx, rdx          ; clear rdx for division\n"
                     "    div rcx               ; divide rax by 10\n"
@@ -76,6 +91,12 @@ void emit_itoa(FILE* output) {
                     "    inc rbx               ; increment character count\n"
                     "    test rax, rax         ; check if quotient is 0\n"
                     "    jnz .itoa_loop        ; repeat if quotient is not 0\n"
+                    "    test r8, r8           ; check if negative\n"
+                    "    jz .itoa_no_sign\n"
+                    "    dec rdi               ; move pointer back for '-'\n"
+                    "    mov byte [rdi], '-'   ; store the negative sign\n"
+                    "    inc rbx               ; increment character count\n"
+                    ".itoa_no_sign:\n"
                     "    mov byte [rdi + rbx], 0xA ; add newline character\n"
                     "    inc rbx               ; increment character count\n"
                     "    mov rax, rbx          ; return character count in rax\n"
