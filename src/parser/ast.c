@@ -207,6 +207,8 @@ const char* operator_to_string(Operator op) {
         case OP_BXNOR:  return "BXNOR";
         case OP_EQ:     return "EQ";
         case OP_NEQ:    return "NEQ";
+        case OP_GE:     return "GE";
+        case OP_LE:     return "LE";
         case OP_LT:     return "LT";
         case OP_GT:     return "GT";
         case OP_ADD:    return "ADD";

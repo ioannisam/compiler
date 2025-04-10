@@ -35,7 +35,7 @@ int parse_errors = 0;
 %token PRINT IF ELSE WHILE 
 %token NUMBER IDENTIFIER STRING
 %token ASSIGN 
-%token EQ LT GT NEQ LAND LOR LNOT
+%token EQ GE LE LT GT NEQ LAND LOR LNOT
 %token BNOT BAND BOR BXOR BNAND BNOR BXNOR LSHIFT RSHIFT
 %token PLUS MINUS MULT DIV MOD
 %token SEMICOLON NEWLINE LPAREN RPAREN LBRACE RBRACE
@@ -53,7 +53,7 @@ int parse_errors = 0;
 %left BOR BNOR BXOR BXNOR
 %left LSHIFT RSHIFT
 
-%left EQ NEQ LT GT
+%left EQ NEQ GE LE GT LT
 %left PLUS MINUS
 %left MULT DIV MOD
 
@@ -113,6 +113,8 @@ expression:
 
     | expression EQ     expression { $$ = create_binop_node(OP_EQ, $1, $3); }
     | expression NEQ    expression { $$ = create_binop_node(OP_NEQ, $1, $3); }
+    | expression GE     expression { $$ = create_binop_node(OP_GE, $1, $3); }
+    | expression LE     expression { $$ = create_binop_node(OP_LE, $1, $3); }
     | expression LT     expression { $$ = create_binop_node(OP_LT, $1, $3); }
     | expression GT     expression { $$ = create_binop_node(OP_GT, $1, $3); }
 

@@ -17,7 +17,7 @@ This project implements a `compiler` for a simple programming language, supporti
 ### Lexer
 - Recognizes keywords (`print`, `if`, `else`, `while`)
 - Identifiers, numbers, strings
-- Operators: `=`, `==`, `!=`, `>`, `<`, `>>`, `<<`, `!`, `&&`, `||`, `~`, `&`, `|`, `^`, `~&`, `~|`, `~^`, `+`, `-`, `*`, `/`, `%`
+- Operators: `=`, `==`, `!=`, `>=`, `<=`, `>`, `<`, `>>`, `<<`, `!`, `&&`, `||`, `~`, `&`, `|`, `^`, `~&`, `~|`, `~^`, `+`, `-`, `*`, `/`, `%`
 - Special characters: `;`, `(`, `)`, `{`, `}`
 - Ignores whitespace and C-style comments (`/* ... */`)
 

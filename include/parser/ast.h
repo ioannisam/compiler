@@ -17,7 +17,7 @@ typedef enum {
 
 typedef enum {
     OP_POS, OP_NEG, 
-    OP_EQ, OP_NEQ, OP_LT, OP_GT,
+    OP_EQ, OP_NEQ, OP_GE, OP_LE, OP_LT, OP_GT,
     OP_LAND, OP_LOR, OP_LNOT,
     OP_BNOT, OP_BAND, OP_BOR, OP_BXOR, OP_BNAND, OP_BNOR, OP_BXNOR,
     OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD,

@@ -30,25 +30,28 @@ extern int yylineno;  // line tracking
     return IDENTIFIER;
 }
 
-"="        { printf("ASSIGN "); return ASSIGN; }
-"!="       { printf("NEQ "); return NEQ; }
+"<<"       { printf("LSHIFT "); return LSHIFT; }
+">>"       { printf("RSHIFT "); return RSHIFT; }
+
 "=="       { printf("EQ "); return EQ; }
+"!="       { printf("NEQ "); return NEQ; }
+">="       { printf("GE "); return GE; }
+"<="       { printf("LE "); return LE; }
 "<"        { printf("LT "); return LT; }
 ">"        { printf("GT "); return GT; }
 "!"        { printf("LNOT "); return LNOT; }
 "&&"       { printf("LAND "); yylval.num = 0; return LAND; }
 "||"       { printf("LOR ");  yylval.num = 0; return LOR; }
 
-"~"        { printf("BNOT ");  return BNOT; }
+"="        { printf("ASSIGN "); return ASSIGN; }
+
 "&"        { printf("BAND "); return BAND; }
 "|"        { printf("BOR ");  return BOR; }
 "^"        { printf("BXOR "); return BXOR; }
 "~&"       { printf("BNAND "); return BNAND; }
 "~|"       { printf("BNOR ");  return BNOR; }
 "~^"       { printf("BXNOR "); return BXNOR; }
-
-"<<"       { printf("LSHIFT "); return LSHIFT; }
-">>"       { printf("RSHIFT "); return RSHIFT; }
+"~"        { printf("BNOT ");  return BNOT; }
 
 "+"        { printf("PLUS "); return PLUS; }
 "-"        { printf("MINUS "); return MINUS; }

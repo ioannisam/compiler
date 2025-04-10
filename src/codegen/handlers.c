@@ -139,6 +139,16 @@ void handle_binop(ASTNode* node, FILE* output) {
             fprintf(output, "    setne al\n");
             fprintf(output, "    movzx rax, al\n");
             break;
+        case OP_GE:
+            fprintf(output, "    cmp rbx, rax\n");
+            fprintf(output, "    setge al\n");
+            fprintf(output, "    movzx rax, al\n");
+            break;
+        case OP_LE:
+            fprintf(output, "    cmp rbx, rax\n");
+            fprintf(output, "    setle al\n");
+            fprintf(output, "    movzx rax, al\n");
+            break;
         case OP_LT:
             fprintf(output, "    cmp rbx, rax\n");
             fprintf(output, "    setl al\n");
