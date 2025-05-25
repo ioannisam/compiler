@@ -1,4 +1,4 @@
-x = 5;
+int x = 42;
 print "about to return";
 return x;
 print "this won't print";

@@ -19,6 +19,9 @@ void generate_code(ASTNode* node, FILE* output) {
             handle_print(node, output);
             break;
         }
+        case NODE_DECL:
+            handle_decl(node, output);
+            break;
         case NODE_ASSIGN: {
             handle_assign(node, output);
             break;

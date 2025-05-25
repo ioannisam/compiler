@@ -1,3 +1,4 @@
 // output should be 13
+int x;
 x = 3 + 5*2;
 print x;

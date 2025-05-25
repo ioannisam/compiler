@@ -26,7 +26,7 @@ void free_symbol_table(void) {
     var_counter = 0;
 }
 
-Symbol* add_symbol(const char *name, const char *value) {
+Symbol* add_symbol(const char* name, const char* value, const char* type) {
     Symbol *sym = lookup_symbol(name);
     if(sym) {
         if(value) {
@@ -57,6 +57,7 @@ Symbol* add_symbol(const char *name, const char *value) {
     
     sym->next = symbol_table;
     symbol_table = sym;
+    sym->type = strdup(type);
     return sym;
 }
 

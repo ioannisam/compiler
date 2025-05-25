@@ -13,6 +13,12 @@ extern int yylineno;  // line tracking
 "//".*     ; // ignore comments
 \n         { printf("NEWLINE\n"); }
 
+"int"      { printf("TYPE_INT "); return TYPE_INT; }
+"main"     { printf("MAIN "); return MAIN; }
+
+"true"     { printf("TRUE "); return TRUE; }
+"false"    { printf("FALSE "); return FALSE; }
+
 "print"    { printf("PRINT "); return PRINT; }
 "if"       { printf("IF "); return IF; }
 "else"     { printf("ELSE "); return ELSE; }
@@ -22,7 +28,7 @@ extern int yylineno;  // line tracking
 
 [0-9]+ { yylval.num = atoi(yytext); printf("NUMBER(%s) ", yytext); return NUMBER; }
 \"([^\"]*)\" {
-    yylval.str = strndup(yytext + 1, strlen(yytext) - 2);
+    yylval.str = strndup(yytext+1, strlen(yytext)-2);
     printf("STRING(%s) ", yylval.str);
     return STRING;
 }

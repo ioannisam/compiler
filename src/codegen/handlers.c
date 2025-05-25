@@ -50,16 +50,29 @@ void handle_print(ASTNode* node, FILE* output) {
     }
 }
 
-void handle_assign(ASTNode* node, FILE* output) {
-    generate_code(node->binop.right, output);
-    if (node->binop.left && node->binop.left->type == NODE_IDENT) {
-        Symbol* sym = lookup_symbol(node->binop.left->str_value);
-        if (!sym) {
-            fprintf(stderr, "Error: Undefined variable '%s'\n", node->binop.left->str_value);
-            exit(EXIT_FAILURE);
-        }
-        fprintf(output, "    mov [%s], rax    ; assign to variable %s\n", sym->label, sym->name);
+void handle_decl(ASTNode* node, FILE* output) {
+    // add to symbol table
+    Symbol* sym = add_symbol(node->decl.name, NULL, node->decl.type);
+    
+    // optional initialization
+    if (node->decl.init_expr) {
+        generate_code(node->decl.init_expr, output);
+        fprintf(output, "    mov [%s], rax\n", sym->label);
     }
+}
+
+void handle_assign(ASTNode* node, FILE* output) {
+    if (node->assign.target->type != NODE_IDENT) {
+        fprintf(stderr, "Error: Assignment target must be an identifier\n");
+        exit(EXIT_FAILURE);
+    }
+    Symbol* sym = lookup_symbol(node->assign.target->str_value);
+    if (!sym) {
+        fprintf(stderr, "Error: Variable '%s' not declared\n", node->assign.target->str_value);
+        exit(EXIT_FAILURE);
+    }
+    generate_code(node->assign.value, output);
+    fprintf(output, "    mov [%s], rax\n", sym->label);
 }
 
 void handle_compound(ASTNode* node, FILE* output) {

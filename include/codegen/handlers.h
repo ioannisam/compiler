@@ -4,6 +4,7 @@
 #include "codegen/codegen.h"
 
 void handle_print(ASTNode* node, FILE* output);
+void handle_decl(ASTNode* node, FILE* output);
 void handle_assign(ASTNode* node, FILE* output);
 
 void handle_if(ASTNode* node, FILE* output);

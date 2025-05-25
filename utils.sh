@@ -66,7 +66,7 @@ test() {
     echo "Running all tests from the test folder..."
     
     TEST_FILES=$(find test -type f -name "*.txt" | sort)
-    echo -e "Found files: $(ls test/*.txt | wc -l)\n"
+    echo -e "Found files: $(echo "$TEST_FILES" | wc -l)\n"
     
     set +e # disable automatic exit on error
     compile || true

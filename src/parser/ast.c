@@ -91,6 +91,15 @@ ASTNode* create_return_node(ASTNode* expr) {
     return node;
 }
 
+ASTNode* create_decl_node(char* type, char* name, ASTNode* init_expr) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = NODE_DECL;
+    node->decl.type = strdup(type);
+    node->decl.name = strdup(name);
+    node->decl.init_expr = init_expr;
+    return node;
+}
+
 ASTNode* create_assign_node(char* id, ASTNode* value) {
     ASTNode* node = malloc(sizeof(ASTNode));
     if (!node) {
@@ -98,8 +107,8 @@ ASTNode* create_assign_node(char* id, ASTNode* value) {
         exit(EXIT_FAILURE);
     }
     node->type = NODE_ASSIGN;
-    node->binop.left = create_ident_node(id);
-    node->binop.right = value;
+    node->assign.target = create_ident_node(id);
+    node->assign.value = value;
     return node;
 }
 

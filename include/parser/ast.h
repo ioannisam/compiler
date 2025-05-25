@@ -1,12 +1,14 @@
 #ifndef AST_H
 #define AST_H
 
+typedef struct ASTNode ASTNode;
 typedef enum {
     NODE_PRINT,
     NODE_IF,
     NODE_WHILE,
     NODE_BREAK,
     NODE_RETURN,
+    NODE_DECL,
     NODE_ASSIGN,
     NODE_BINOP,
     NODE_IDENT,
@@ -52,6 +54,15 @@ typedef struct ASTNode {
         struct {
             struct ASTNode* expr;
         } return_stmt;
+        struct {
+            char* type;
+            char* name;
+            ASTNode* init_expr;
+        } decl;
+        struct {
+            ASTNode* target;
+            ASTNode* value;
+        } assign;
     };
 } ASTNode;
 
@@ -60,6 +71,7 @@ ASTNode* create_if_node(ASTNode* cond, ASTNode* body, ASTNode* else_body);
 ASTNode* create_while_node(ASTNode* cond, ASTNode* body);
 ASTNode* create_break_node(void);
 ASTNode* create_return_node(ASTNode* expr);
+ASTNode* create_decl_node(char* type, char* name, ASTNode* init_expr);
 ASTNode* create_assign_node(char* id, ASTNode* value);
 ASTNode* create_binop_node(Operator op, ASTNode* left, ASTNode* right);
 ASTNode* create_ident_node(char* id);

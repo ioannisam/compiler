@@ -32,6 +32,8 @@ int parse_errors = 0;
 
 // tokens
 %token ERROR
+%token MAIN TYPE_INT 
+%token TRUE FALSE
 %token PRINT IF ELSE WHILE BREAK RETURN
 %token NUMBER IDENTIFIER STRING
 %token ASSIGN 
@@ -60,7 +62,7 @@ int parse_errors = 0;
 %nonassoc UMINUS UPLUS
 
 // types
-%type <node> program statements statement expression block
+%type <node> program statements statement expression block decl optional_init
 %type <str> IDENTIFIER STRING
 %type <num> NUMBER
 
@@ -74,9 +76,18 @@ program:
     statements { root = $1; }
     ;
 
+decl: TYPE_INT IDENTIFIER optional_init  {
+    $$ = create_decl_node("int", $2, $3);
+};
+
+optional_init: 
+      SEMICOLON { $$ = NULL; }
+    | ASSIGN expression SEMICOLON { $$ = $2; }
+
 statements:
       /* empty */ { $$ = NULL; }
     | statements statement { $$ = append_statement($1, $2); }
+    | statements NEWLINE { $$ = $1; }
     ;
 
 block: 
@@ -86,7 +97,8 @@ block:
     ;
 
 statement:
-      IDENTIFIER ASSIGN expression SEMICOLON
+      decl
+    | IDENTIFIER ASSIGN expression SEMICOLON
         { $$ = create_assign_node($1, $3); }
     | block
     | PRINT expression SEMICOLON
@@ -107,6 +119,9 @@ statement:
 
 expression:
       LPAREN expression RPAREN { $$ = $2; }
+
+    | TRUE      { $$ = create_num_node(1); }
+    | FALSE     { $$ = create_num_node(0); }
 
     | IDENTIFIER { $$ = create_ident_node($1); }
     | NUMBER     { $$ = create_num_node($1); }

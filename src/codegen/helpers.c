@@ -40,12 +40,25 @@ void emit_data_section(ASTNode* node, FILE* output) {
 // BSS Section Helpers
 void collect_variables(ASTNode* node) {
     if (!node) return;
-    if (node->type == NODE_ASSIGN && node->binop.left && node->binop.left->type == NODE_IDENT) {
-        add_symbol(node->binop.left->str_value, NULL);
+    switch (node->type) {
+        case NODE_DECL:
+            add_symbol(node->decl.name, NULL, node->decl.type);
+            break;
+        /* was type agnostic
+        case NODE_ASSIGN:
+            if (node->binop.left && node->binop.left->type == NODE_IDENT)
+                add_symbol(node->binop.left->str_value, NULL, "int");
+            break;
+        */
     }
-    if (node->type == NODE_COMPOUND || node->type == NODE_ASSIGN) {
+    if (node->type == NODE_COMPOUND || node->type == NODE_ASSIGN || node->type == NODE_DECL) {
         collect_variables(node->binop.left);
         collect_variables(node->binop.right);
+    } else if (node->type == NODE_IF) {
+        collect_variables(node->control.if_body);
+        collect_variables(node->control.else_body);
+    } else if (node->type == NODE_WHILE) {
+        collect_variables(node->control.loop_body);
     }
 }
 
