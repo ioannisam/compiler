@@ -62,6 +62,11 @@ void handle_assign(ASTNode* node, FILE* output) {
     }
 }
 
+void handle_compound(ASTNode* node, FILE* output) {
+    generate_code(node->binop.left, output);
+    generate_code(node->binop.right, output);
+}
+
 void handle_if(ASTNode* node, FILE* output) {
     int current_label = code_label_counter;
     code_label_counter += 2;
@@ -82,19 +87,34 @@ void handle_if(ASTNode* node, FILE* output) {
 }
 
 void handle_while(ASTNode* node, FILE* output) {
-    int current_label = code_label_counter;
-    code_label_counter += 2;  // We need two labels: loop start and loop end
+    int start_label = code_label_counter++;
+    int end_label = code_label_counter++;
     
-    fprintf(output, ".Lwhile%d:\n", current_label);
+    fprintf(output, ".Lwhile%d:\n", start_label);
     generate_code(node->control.condition, output);
     
     fprintf(output, "    cmp rax, 0\n");
-    fprintf(output, "    je .Lend%d\n\n", current_label);
+    fprintf(output, "    je .Lend%d\n\n", end_label);
     
     generate_code(node->control.loop_body, output);
     
-    fprintf(output, "    jmp .Lwhile%d\n", current_label);
-    fprintf(output, ".Lend%d:\n\n", current_label);
+    fprintf(output, "    jmp .Lwhile%d\n", start_label);
+    fprintf(output, ".Lend%d:\n\n", end_label);
+}
+
+void handle_break(ASTNode* node, FILE* output) {
+    fprintf(output, "    jmp .Lend%d\n", code_label_counter - 1);
+}
+
+void handle_return(ASTNode* node, FILE* output) {
+    if (node->return_stmt.expr) {
+        generate_code(node->return_stmt.expr, output);
+        fprintf(output, "    mov rdi, rax   ; Set exit code\n");
+    } else {
+        fprintf(output, "    xor rdi, rdi   ; Default exit code 0\n");
+    }
+    fprintf(output, "    mov rax, 60      ; sys_exit\n");
+    fprintf(output, "    syscall\n");
 }
 
 void handle_binop(ASTNode* node, FILE* output) {
@@ -244,9 +264,4 @@ void handle_unop(ASTNode* node, FILE* output) {
             fprintf(output, "    ; unsupported unary operator\n");
             break;
     }
-}
-
-void handle_compound(ASTNode* node, FILE* output) {
-    generate_code(node->binop.left, output);
-    generate_code(node->binop.right, output);
 }

@@ -74,6 +74,23 @@ ASTNode* create_while_node(ASTNode* cond, ASTNode* body) {
     return node;
 }
 
+ASTNode* create_break_node(void) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed for break node\n");
+        exit(EXIT_FAILURE);
+    }
+    node->type = NODE_BREAK;
+    return node;
+}
+
+ASTNode* create_return_node(ASTNode* expr) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = NODE_RETURN;
+    node->return_stmt.expr = expr;
+    return node;
+}
+
 ASTNode* create_assign_node(char* id, ASTNode* value) {
     ASTNode* node = malloc(sizeof(ASTNode));
     if (!node) {
@@ -175,6 +192,11 @@ void free_ast(ASTNode* node) {
             free_ast(node->control.condition);
             free_ast(node->control.loop_body);
             break;
+        case NODE_BREAK:
+            break;
+        case NODE_RETURN:
+           free_ast(node->return_stmt.expr);
+           break;
         case NODE_PRINT:
             free_ast(node->print_expr.expr);
             break;
@@ -259,6 +281,9 @@ void print_ast(ASTNode* node, int indent) {
             print_ast(node->control.condition, indent+1);
             printf("%*sBODY:\n", indent*2, "");
             print_ast(node->control.loop_body, indent+1);
+            break;
+        case NODE_BREAK:
+            printf("BREAK\n");
             break;
         case NODE_ASSIGN:
             printf("ASSIGN\n");

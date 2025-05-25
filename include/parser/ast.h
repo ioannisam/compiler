@@ -5,6 +5,8 @@ typedef enum {
     NODE_PRINT,
     NODE_IF,
     NODE_WHILE,
+    NODE_BREAK,
+    NODE_RETURN,
     NODE_ASSIGN,
     NODE_BINOP,
     NODE_IDENT,
@@ -47,12 +49,17 @@ typedef struct ASTNode {
         struct {
             struct ASTNode* expr;
         } print_expr;
+        struct {
+            struct ASTNode* expr;
+        } return_stmt;
     };
 } ASTNode;
 
 ASTNode* create_print_node(ASTNode* expr);
 ASTNode* create_if_node(ASTNode* cond, ASTNode* body, ASTNode* else_body);
 ASTNode* create_while_node(ASTNode* cond, ASTNode* body);
+ASTNode* create_break_node(void);
+ASTNode* create_return_node(ASTNode* expr);
 ASTNode* create_assign_node(char* id, ASTNode* value);
 ASTNode* create_binop_node(Operator op, ASTNode* left, ASTNode* right);
 ASTNode* create_ident_node(char* id);

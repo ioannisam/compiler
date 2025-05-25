@@ -32,7 +32,7 @@ int parse_errors = 0;
 
 // tokens
 %token ERROR
-%token PRINT IF ELSE WHILE 
+%token PRINT IF ELSE WHILE BREAK RETURN
 %token NUMBER IDENTIFIER STRING
 %token ASSIGN 
 %token EQ GE LE LT GT NEQ LAND LOR LNOT
@@ -97,6 +97,10 @@ statement:
         { $$ = create_if_node($3, $5, $7); }
     | WHILE LPAREN expression RPAREN statement
         { $$ = create_while_node($3, $5); }
+    | BREAK SEMICOLON
+        { $$ = create_break_node(); }
+    | RETURN expression SEMICOLON
+       { $$ = create_return_node($2); }
     | error SEMICOLON
         { yyerrok; yyclearin; $$ = create_empty_node(); }
     ;

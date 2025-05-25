@@ -31,6 +31,14 @@ void generate_code(ASTNode* node, FILE* output) {
             handle_while(node, output);
             break;
         }
+        case NODE_BREAK: {
+            handle_break(node, output);
+            break;
+        }
+        case NODE_RETURN: {
+           handle_return(node, output);
+           break;
+        }
         case NODE_NUM:
             handle_num(node, output);
             break;

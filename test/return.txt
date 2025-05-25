@@ -1,0 +1,4 @@
+x = 5;
+print "about to return";
+return x;
+print "this won't print";

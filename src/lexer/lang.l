@@ -17,6 +17,8 @@ extern int yylineno;  // line tracking
 "if"       { printf("IF "); return IF; }
 "else"     { printf("ELSE "); return ELSE; }
 "while"    { printf("WHILE "); return WHILE; }
+"break"    { printf("BREAK "); return BREAK; }
+"return"   { printf("RETURN "); return RETURN; }
 
 [0-9]+ { yylval.num = atoi(yytext); printf("NUMBER(%s) ", yytext); return NUMBER; }
 \"([^\"]*)\" {

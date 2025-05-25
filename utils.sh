@@ -29,7 +29,7 @@ run() {
 
 assemble() {
     echo "Assembling the generated assembly file..."
-    nasm -f elf64 build/asm/program.asm -o build/asm/program.o || { echo "Assembly failed"; exit 1; }
+    nasm -f elf64 build/asm/program.asm -o build/asm/program.o || { echo "Assembly failed"; return 1; }
 }
 
 link() {
@@ -62,6 +62,38 @@ example() {
     binary
 }
 
+test() {
+    echo "Running all tests from the test folder..."
+    
+    TEST_FILES=$(find test -type f -name "*.txt" | sort)
+    echo -e "Found files: $(ls test/*.txt | wc -l)\n"
+    
+    set +e # disable automatic exit on error
+    compile || true
+    for test_file in $TEST_FILES; do
+        echo -e "\n➢ Testing with $test_file..."
+        
+        run "$test_file"
+        rc=$?
+        # if run was successful
+        if [ $rc -eq 0 ]; then
+            assemble || true
+            # if assembly was successful
+            if [ $? -eq 0 ]; then
+                link || true
+                # if linking was successful
+                if [ $? -eq 0 ]; then
+                    binary || true
+                fi
+            fi
+        else
+            echo "Compiler returned error (skipping assemble/link/binary)"
+        fi
+        
+        echo "-----------------------------------"
+    done
+}
+
 clean() {
     echo "Cleaning up generated files and build artifacts..."
     rm -f src/parser/parser.tab.c include/parser/parser.tab.h
@@ -83,6 +115,7 @@ help() {
     echo "  build {input}  - Run the full pipeline: generate, compile, run, assemble and link."
     echo "  example        - Run compiler with predefined example input and run the binary."
     echo "  clean          - Remove all generated files and build artifacts."
+    echo "  test           - Run all tests from the test folder."
     echo "  help           - Display this help message."
 }
 
@@ -111,6 +144,9 @@ case "$1" in
         ;;
     example)
         example
+        ;;
+    test)
+        test
         ;;
     clean)
         clean

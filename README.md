@@ -15,7 +15,7 @@ This project implements a `compiler` for a simple programming language, supporti
 ## Features
 
 ### Lexer
-- Recognizes keywords (`print`, `if`, `else`, `while`)
+- Recognizes keywords (`print`, `if`, `else`, `while`, `break`, `return`)
 - Identifiers, numbers, strings
 - Operators: `=`, `==`, `!=`, `>=`, `<=`, `>`, `<`, `>>`, `<<`, `!`, `&&`, `||`, `~`, `&`, `|`, `^`, `~&`, `~|`, `~^`, `+`, `-`, `*`, `/`, `%`
 - Special characters: `;`, `(`, `)`, `{`, `}`
@@ -26,13 +26,15 @@ This project implements a `compiler` for a simple programming language, supporti
    - `print` statements
    - `if`/`else` conditionals
    - `while` loops
+   - `break` statements
+   - `return`statements
    - Variable assignments
    - Arithmetic and comparison operations
 - Error handling for syntax issues
 - Builds an **Abstract Syntax Tree (AST)** for semantic analysis
 
 ### Code Generation
-- Generates assembly code (currently supports the `print`, `if/else` and `while` statements)
+- Generates assembly code (currently supports the `print`, `if/else`,`while`, `break` and `return` statements)
 - Outputs an assembly file to **build/asm/program.asm**
 
 ## Files
@@ -80,6 +82,7 @@ Use the provided build script (`utils.sh` located at the project root) to automa
 - **`binary`**: Run the final binary (`build/bin/program`).
 - **`build`**: Run the full pipeline — generate, compile, run the compiler, then assemble and link to produce the binary.
 - **`example`**: Run the compiler with a predefined example input (`test/print.txt`), then assemble, link and run the final binary.
+- **`test`**: Run all tests from the test folder.
 - **`clean`**: Remove all generated files and build artifacts.
 - **`help`**: Display this help message.
 
