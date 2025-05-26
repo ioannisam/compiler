@@ -5,6 +5,7 @@ typedef struct ASTNode ASTNode;
 typedef enum {
     NODE_PROGRAM,
     NODE_FUNC,
+    NODE_CALL,
     NODE_PARAM,
     NODE_PRINT,
     NODE_IF,
@@ -47,6 +48,10 @@ typedef struct ASTNode {
             ASTNode* body;
         } func;
         struct {
+            char* func_name;
+            ASTNode* args;
+        } func_call;
+        struct {
             char* type;
             char* name;
         } param;
@@ -85,6 +90,8 @@ typedef struct ASTNode {
 
 ASTNode* create_program_node(ASTNode* functions, ASTNode* main_block);
 ASTNode* create_func_node(char* return_type, char* name, ASTNode* params, ASTNode* body);
+ASTNode* create_call_node(char* func_name, ASTNode* args);
+ASTNode* append_arg(ASTNode* arg_list, ASTNode* arg);
 ASTNode* append_function(ASTNode* func_list, ASTNode* func);
 ASTNode* create_param_node(char* type, char* name);
 ASTNode* append_param(ASTNode* param_list, ASTNode* param);

@@ -75,6 +75,30 @@ ASTNode* create_func_node(char* return_type, char* name, ASTNode* params, ASTNod
     return node;
 }
 
+ASTNode* create_call_node(char* func_name, ASTNode* args) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_call_node\n");
+        exit(EXIT_FAILURE);
+    }
+    node->type = NODE_CALL;
+    node->func_call.func_name = strdup(func_name);
+    node->func_call.args = args;
+    return node;
+}
+
+ASTNode* append_arg(ASTNode* arg_list, ASTNode* arg) {
+    if (!arg_list) {
+        return create_compound_node(arg, NULL);
+    }
+    ASTNode* current = arg_list;
+    while (current->binop.right != NULL) {
+        current = current->binop.right;
+    }
+    current->binop.right = create_compound_node(arg, NULL);
+    return arg_list;
+}
+
 ASTNode* append_function(ASTNode* func_list, ASTNode* func) {
     if (!func_list) {
         return create_compound_node(func, NULL);
@@ -242,6 +266,10 @@ ASTNode* create_empty_node(void) {
 void free_ast(ASTNode* node) {
     if (!node) return;
     switch (node->type) {
+        case NODE_CALL:
+            free(node->func_call.func_name);
+            free_ast(node->func_call.args);
+            break;
         case NODE_ASSIGN:
             free_ast(node->binop.left);
             free_ast(node->binop.right);

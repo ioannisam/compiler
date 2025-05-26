@@ -67,7 +67,7 @@ int parse_errors = 0;
 %nonassoc UMINUS UPLUS
 
 // types
-%type <node> program statements statement expression block functions function_decl params param_list param main_block decl optional_init
+%type <node> program statements statement expression block functions function_decl arg_list params param_list param main_block decl optional_init
 %type <str> IDENTIFIER STRING
 %type <num> NUMBER
 
@@ -92,6 +92,7 @@ main_block:
 functions:
     /* empty */ { $$ = NULL; }
     | functions function_decl { $$ = append_function($1, $2); }
+    | functions NEWLINE { $$ = $1; }
     ;
 
 block: 
@@ -105,6 +106,12 @@ function_decl:
         { $$ = create_func_node("int", $2, $4, $6); }
     | TYPE_INT MAIN LPAREN params RPAREN block %prec FUNCTION_PREC
         { $$ = create_func_node("int", strdup("main"), $4, $6); }
+    ;
+
+arg_list:
+    /* empty */ { $$ = NULL; }
+    | expression { $$ = create_compound_node($1, NULL); }
+    | arg_list COMMA expression { $$ = append_arg($1, $3); }
     ;
 
 params:
@@ -201,6 +208,8 @@ expression:
     | expression MULT   expression { $$ = create_binop_node(OP_MUL, $1, $3); }
     | expression DIV    expression { $$ = create_binop_node(OP_DIV, $1, $3); }
     | expression MOD    expression { $$ = create_binop_node(OP_MOD, $1, $3); }
+    
+    | IDENTIFIER LPAREN arg_list RPAREN { $$ = create_call_node($1, $3); }
     ;
 
 %%

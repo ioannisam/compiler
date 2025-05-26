@@ -5,6 +5,7 @@
 
 void handle_program(ASTNode* node, FILE* output);
 void handle_function(ASTNode* node, FILE* output);
+void handle_call(ASTNode* node, FILE* output);
 
 void handle_print(ASTNode* node, FILE* output);
 void handle_decl(ASTNode* node, FILE* output);

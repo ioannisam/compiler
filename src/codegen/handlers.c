@@ -30,16 +30,66 @@ void handle_program(ASTNode* node, FILE* output) {
 }
 
 void handle_function(ASTNode* node, FILE* output) {
-
     fprintf(output, "%s:\n", node->func.name);
     fprintf(output, "    push rbp\n");
     fprintf(output, "    mov rbp, rsp\n");
+
+    // Load parameters from the stack into their symbols
+    ASTNode* params = node->func.params;
+    int param_offset = 16;  // Parameters start at RBP + 16
+    while (params) {
+        if (params->type == NODE_COMPOUND) {
+            ASTNode* param_node = params->binop.left;
+            if (param_node->type == NODE_PARAM) {
+                Symbol* sym = lookup_symbol(param_node->param.name);
+                if (sym) {
+                    fprintf(output, "    mov rax, [rbp + %d]\n", param_offset);
+                    fprintf(output, "    mov [%s], rax\n", sym->label);
+                    param_offset += 8;
+                }
+            }
+            params = params->binop.right;
+        } else if (params->type == NODE_PARAM) {
+            Symbol* sym = lookup_symbol(params->param.name);
+            if (sym) {
+                fprintf(output, "    mov rax, [rbp + %d]\n", param_offset);
+                fprintf(output, "    mov [%s], rax\n", sym->label);
+            }
+            break;
+        } else {
+            break;
+        }
+    }
 
     generate_code(node->func.body, output);
 
     fprintf(output, "    mov rsp, rbp\n");
     fprintf(output, "    pop rbp\n");
     fprintf(output, "    ret\n\n");
+}
+
+void handle_call(ASTNode* node, FILE* output) {
+    int arg_count = 0;
+    ASTNode* current_arg = node->func_call.args;
+
+    while (current_arg) {
+        if (current_arg->type == NODE_COMPOUND) {
+            generate_code(current_arg->binop.left, output);
+            fprintf(output, "    push rax\n");
+            arg_count++;
+            current_arg = current_arg->binop.right;
+        } else {
+            generate_code(current_arg, output);
+            fprintf(output, "    push rax\n");
+            arg_count++;
+            break;
+        }
+    }
+
+    fprintf(output, "    call %s\n", node->func_call.func_name);
+    if (arg_count > 0) {
+        fprintf(output, "    add rsp, %d\n", arg_count * 8);
+    }
 }
 
 void handle_num(ASTNode* node, FILE* output) {

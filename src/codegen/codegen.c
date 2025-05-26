@@ -23,6 +23,9 @@ void generate_code(ASTNode* node, FILE* output) {
             handle_function(node, output);
             break;
         }
+        case NODE_CALL:
+            handle_call(node, output);
+            break;
         case NODE_PRINT: {
             handle_print(node, output);
             break;
