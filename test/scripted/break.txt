@@ -1,5 +1,9 @@
+{
+
 while (true) {
     print 1;
     break;
     print 2;  // this won't be printed
+}
+
 }

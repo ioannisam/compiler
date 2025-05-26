@@ -40,12 +40,17 @@ int parse_errors = 0;
 %token EQ GE LE LT GT NEQ LAND LOR LNOT
 %token BNOT BAND BOR BXOR BNAND BNOR BXNOR LSHIFT RSHIFT
 %token PLUS MINUS MULT DIV MOD
-%token SEMICOLON NEWLINE LPAREN RPAREN LBRACE RBRACE
+%token SEMICOLON COMMA NEWLINE LPAREN RPAREN LBRACE RBRACE
 
-// precedence
+// optional declaration conflict
+%nonassoc DECL_PREC
+%nonassoc FUNCTION_PREC
+
+// dangling if conflict
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
 
+// precedence
 %right LNOT
 %left LAND
 %left LOR
@@ -62,7 +67,7 @@ int parse_errors = 0;
 %nonassoc UMINUS UPLUS
 
 // types
-%type <node> program statements statement expression block decl optional_init
+%type <node> program statements statement expression block functions function_decl params param_list param main_block decl optional_init
 %type <str> IDENTIFIER STRING
 %type <num> NUMBER
 
@@ -73,21 +78,20 @@ start:
     ;
 
 program:
-    statements { root = $1; }
+      functions main_block { $$ = create_program_node($1, $2); }
     ;
 
-decl: TYPE_INT IDENTIFIER optional_init  {
-    $$ = create_decl_node("int", $2, $3);
-};
+main_block:
+    /* empty */ { $$ = NULL; }
+    /* scripted mode: statements in a block */
+    | block { $$ = $1; }
+    /* structured mode: functions + optional MAIN { … } */
+    | MAIN block { $$ = $2; }
+    ;
 
-optional_init: 
-      SEMICOLON { $$ = NULL; }
-    | ASSIGN expression SEMICOLON { $$ = $2; }
-
-statements:
-      /* empty */ { $$ = NULL; }
-    | statements statement { $$ = append_statement($1, $2); }
-    | statements NEWLINE { $$ = $1; }
+functions:
+    /* empty */ { $$ = NULL; }
+    | functions function_decl { $$ = append_function($1, $2); }
     ;
 
 block: 
@@ -96,8 +100,48 @@ block:
     }
     ;
 
+function_decl:
+    TYPE_INT IDENTIFIER LPAREN params RPAREN block %prec FUNCTION_PREC
+        { $$ = create_func_node("int", $2, $4, $6); }
+    | TYPE_INT MAIN LPAREN params RPAREN block %prec FUNCTION_PREC
+        { $$ = create_func_node("int", strdup("main"), $4, $6); }
+    ;
+
+params:
+    /* empty */ { $$ = NULL; }
+    | param_list { $$ = $1; }
+    ;
+
+param_list:
+    param { $$ = create_compound_node($1, NULL); }
+    | param_list COMMA param { $$ = append_param($1, $3); }
+    ;
+
+param:
+    TYPE_INT IDENTIFIER
+        { $$ = create_param_node("int", $2); }
+    ;
+
+decl: 
+    TYPE_INT IDENTIFIER optional_init %prec DECL_PREC  
+        { $$ = create_decl_node("int", $2, $3); }
+    ;
+
+optional_init:
+      /* empty */            { $$ = NULL; }
+    | ASSIGN expression      { $$ = $2; }
+    ;
+
+statements:
+      /* empty */ { $$ = NULL; }
+    | statements NEWLINE statement { $$ = append_statement($1, $3); }
+    | statements NEWLINE { $$ = $1; }
+    | statement { $$ = create_compound_node($1, NULL); }
+    ;
+
 statement:
-      decl
+      decl SEMICOLON
+        { $$ = $1; }
     | IDENTIFIER ASSIGN expression SEMICOLON
         { $$ = create_assign_node($1, $3); }
     | block

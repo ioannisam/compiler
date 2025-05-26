@@ -3,6 +3,23 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+
+// Main Check
+bool has_main_function(ASTNode* functions) {
+    while (functions) {
+        if (functions->type == NODE_COMPOUND) {
+            ASTNode* func_node = functions->binop.left;
+            if (func_node->type == NODE_FUNC && 
+                strcmp(func_node->func.name, "main") == 0) {
+                return true;
+            }
+        }
+        functions = functions->binop.right;
+    }
+    return false;
+}
 
 // Data Section Helpers
 void collect_print_messages(ASTNode* node, FILE* output) {
@@ -14,6 +31,10 @@ void collect_print_messages(ASTNode* node, FILE* output) {
                 fprintf(output, "msg%d db \"%s\", 0xA\n", data_label_counter++, 
                         node->print_expr.expr->str_value);
             }
+            break;
+        case NODE_PROGRAM:
+            collect_print_messages(node->program.functions, output);
+            collect_print_messages(node->program.main_block, output);
             break;
         case NODE_COMPOUND:
             collect_print_messages(node->binop.left, output);
@@ -43,6 +64,17 @@ void collect_variables(ASTNode* node) {
     switch (node->type) {
         case NODE_DECL:
             add_symbol(node->decl.name, NULL, node->decl.type);
+            break;
+        case NODE_PARAM:
+            add_symbol(node->param.name, NULL, node->param.type);
+            break;
+        case NODE_FUNC:
+            collect_variables(node->func.params);
+            collect_variables(node->func.body);
+            break;
+        case NODE_PROGRAM:
+            collect_variables(node->program.functions);
+            collect_variables(node->program.main_block);
             break;
         /* was type agnostic
         case NODE_ASSIGN:
@@ -75,10 +107,7 @@ void emit_bss_section(FILE* output) {
 // Text Section Helpers
 void emit_text_section(ASTNode* node, FILE* output) {
     fprintf(output, "section .text\n");
-    fprintf(output, "global _start\n");
-    fprintf(output, "_start:\n");
     generate_code(node, output);
-    fprintf(output, "    mov rax, 60\n    xor rdi, rdi\n    syscall\n");
 }
 
 void emit_itoa(FILE* output) {

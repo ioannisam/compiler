@@ -1,9 +1,46 @@
 #include "codegen/handlers.h"
 #include "codegen/symbol.h"
+#include "codegen/helpers.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+
+void handle_program(ASTNode* node, FILE* output) {
+
+    generate_code(node->program.functions, output);
+
+    fprintf(output, "global _start\n_start:\n");
+    
+    // explicit main or scripted block
+    if (has_main_function(node->program.functions)) { 
+        fprintf(output,
+            "    call main       ; RAX ← main()\n"
+            "    mov rdi, rax    ; RDI ← return value of main\n"
+            "    mov rax, 60     ; syscall: exit\n"
+            "    syscall\n");
+    } else if (node->program.main_block) { 
+        generate_code(node->program.main_block, output);
+        fprintf(output, "    mov rax, 60\n    xor rdi, rdi\n    syscall\n");
+    } else {
+        fprintf(stderr, "Error: No entry point (main function or MAIN block)\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void handle_function(ASTNode* node, FILE* output) {
+
+    fprintf(output, "%s:\n", node->func.name);
+    fprintf(output, "    push rbp\n");
+    fprintf(output, "    mov rbp, rsp\n");
+
+    generate_code(node->func.body, output);
+
+    fprintf(output, "    mov rsp, rbp\n");
+    fprintf(output, "    pop rbp\n");
+    fprintf(output, "    ret\n\n");
+}
 
 void handle_num(ASTNode* node, FILE* output) {
     fprintf(output, "    mov rax, %d\n", node->num_value);
@@ -122,12 +159,13 @@ void handle_break(ASTNode* node, FILE* output) {
 void handle_return(ASTNode* node, FILE* output) {
     if (node->return_stmt.expr) {
         generate_code(node->return_stmt.expr, output);
-        fprintf(output, "    mov rdi, rax   ; Set exit code\n");
     } else {
-        fprintf(output, "    xor rdi, rdi   ; Default exit code 0\n");
+        fprintf(output, "    xor rax, rax    ; return 0\n");
     }
-    fprintf(output, "    mov rax, 60      ; sys_exit\n");
-    fprintf(output, "    syscall\n");
+    fprintf(output,
+        "    mov rsp, rbp\n"
+        "    pop rbp\n"
+        "    ret\n\n");
 }
 
 void handle_binop(ASTNode* node, FILE* output) {

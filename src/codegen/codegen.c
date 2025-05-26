@@ -15,6 +15,14 @@ void generate_code(ASTNode* node, FILE* output) {
 
     if (!node) return;
     switch (node->type) {
+        case NODE_PROGRAM: {
+            handle_program(node, output);
+            break;
+        }
+        case NODE_FUNC: {
+            handle_function(node, output);
+            break;
+        }
         case NODE_PRINT: {
             handle_print(node, output);
             break;

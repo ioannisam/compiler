@@ -1,3 +1,5 @@
+{
+
 int x = false;
 int y = 1;
 while (!x) {
@@ -9,3 +11,5 @@ while (!x) {
 }
 print "y is divisible by 2 AND 3:";
 print y;
+
+}

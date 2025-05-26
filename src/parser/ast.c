@@ -49,6 +49,68 @@ ASTNode* create_num_node(int value) {
     return node;
 }
 
+ASTNode* create_program_node(ASTNode* functions, ASTNode* main_block) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_program_node\n");
+        exit(EXIT_FAILURE);
+    }
+    node->type = NODE_PROGRAM;
+    node->program.functions = functions;
+    node->program.main_block = main_block;
+    return node;
+}
+
+ASTNode* create_func_node(char* return_type, char* name, ASTNode* params, ASTNode* body) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_func_node\n");
+        exit(EXIT_FAILURE);
+    }
+    node->type = NODE_FUNC;
+    node->func.return_type = strdup(return_type);
+    node->func.name = strdup(name);
+    node->func.params = params;
+    node->func.body = body;
+    return node;
+}
+
+ASTNode* append_function(ASTNode* func_list, ASTNode* func) {
+    if (!func_list) {
+        return create_compound_node(func, NULL);
+    }
+    ASTNode* current = func_list;
+    while (current->binop.right != NULL) {
+        current = current->binop.right;
+    }
+    current->binop.right = create_compound_node(func, NULL);
+    return func_list;
+}
+
+ASTNode* create_param_node(char* type, char* name) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "Memory allocation failed in create_param_node\n");
+        exit(EXIT_FAILURE);
+    }
+    node->type = NODE_PARAM;
+    node->param.type = strdup(type);
+    node->param.name = strdup(name);
+    return node;
+}
+
+ASTNode* append_param(ASTNode* param_list, ASTNode* param) {
+    if (!param_list) {
+        return create_compound_node(param, NULL);
+    }
+    ASTNode* current = param_list;
+    while (current->binop.right != NULL) {
+        current = current->binop.right;
+    }
+    current->binop.right = create_compound_node(param, NULL);
+    return param_list;
+}
+
 ASTNode* create_if_node(ASTNode* cond, ASTNode* if_body, ASTNode* else_body) {
     ASTNode* node = malloc(sizeof(ASTNode));
     if (!node) {

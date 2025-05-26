@@ -1,6 +1,8 @@
 int main() {
-    int a = true;  // 1
-    int b = false; // 0
-    a = b + 5;
-    return a;
+    int a = 4;
+    print a;
+    
+    int b;
+    b = a+10;
+    return b;
 }

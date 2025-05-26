@@ -1,8 +1,12 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+#include <stdbool.h>
+
 #include "codegen/codegen.h"
 #include "parser/ast.h"
+
+bool has_main_function(ASTNode* functions);
 
 void collect_print_messages(ASTNode* node, FILE* output);
 void emit_data_section(ASTNode* node, FILE* output);

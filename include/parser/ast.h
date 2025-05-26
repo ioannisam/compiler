@@ -3,6 +3,9 @@
 
 typedef struct ASTNode ASTNode;
 typedef enum {
+    NODE_PROGRAM,
+    NODE_FUNC,
+    NODE_PARAM,
     NODE_PRINT,
     NODE_IF,
     NODE_WHILE,
@@ -33,6 +36,20 @@ typedef struct ASTNode {
     union {
         int num_value;
         char* str_value;
+        struct {
+            ASTNode* functions;
+            ASTNode* main_block;
+        } program;
+        struct {
+            char* return_type;
+            char* name;
+            ASTNode* params;
+            ASTNode* body;
+        } func;
+        struct {
+            char* type;
+            char* name;
+        } param;
         struct {
             struct ASTNode* left;
             struct ASTNode* right;
@@ -65,6 +82,12 @@ typedef struct ASTNode {
         } assign;
     };
 } ASTNode;
+
+ASTNode* create_program_node(ASTNode* functions, ASTNode* main_block);
+ASTNode* create_func_node(char* return_type, char* name, ASTNode* params, ASTNode* body);
+ASTNode* append_function(ASTNode* func_list, ASTNode* func);
+ASTNode* create_param_node(char* type, char* name);
+ASTNode* append_param(ASTNode* param_list, ASTNode* param);
 
 ASTNode* create_print_node(ASTNode* expr);
 ASTNode* create_if_node(ASTNode* cond, ASTNode* body, ASTNode* else_body);

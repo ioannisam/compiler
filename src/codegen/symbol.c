@@ -6,6 +6,7 @@
 
 static Symbol* symbol_table = NULL;
 static int var_counter = 0;
+static int func_var_counter = 0;
 
 void init_symbol_table(void) {
     symbol_table = NULL;
@@ -53,7 +54,7 @@ Symbol* add_symbol(const char* name, const char* value, const char* type) {
         fprintf(stderr, "Memory allocation failed in add_symbol (label)\n");
         exit(EXIT_FAILURE);
     }
-    sprintf(sym->label, "var%d", var_counter++);
+    sprintf(sym->label, "var%d", func_var_counter++);
     
     sym->next = symbol_table;
     symbol_table = sym;

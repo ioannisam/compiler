@@ -11,7 +11,7 @@ extern int yylineno;  // line tracking
 %%
 [ \t\r]+   ; // ignore whitespace
 "//".*     ; // ignore comments
-\n         { printf("NEWLINE\n"); }
+\n         { printf("NEWLINE\n"); return NEWLINE; }
 
 "int"      { printf("TYPE_INT "); return TYPE_INT; }
 "main"     { printf("MAIN "); return MAIN; }
@@ -73,6 +73,7 @@ extern int yylineno;  // line tracking
 "}"        { printf("RBRACE "); return RBRACE; }
 
 ";"        { printf("SEMICOLON "); return SEMICOLON; }
+","        { printf("COMMA "); return COMMA; }
 
 .          { 
     fprintf(stderr, "Error: Invalid character '%s' at line %d\n", yytext, yylineno);
