@@ -49,7 +49,9 @@ void collect_print_messages(ASTNode* node, FILE* output) {
         case NODE_WHILE:
             collect_print_messages(node->control.loop_body, output);
             break;
-
+        case NODE_FUNC:
+            collect_print_messages(node->func.body, output);
+            break;
     }
 }
 
