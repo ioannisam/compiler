@@ -12,5 +12,5 @@ int method(int a) {
 
 int main() {
     print method(5);
-    return method(5);
+    return 0;
 }

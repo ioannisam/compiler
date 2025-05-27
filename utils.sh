@@ -23,26 +23,31 @@ compile() {
 
 run() {
     echo "Running the compiler executable..."
-    mkdir -p build/asm
+    mkdir -p build/{MIXAL,bin}
     ./bin/compiler "$@"
 }
 
 assemble() {
-    echo "Assembling the generated assembly file..."
-    nasm -f elf64 build/asm/program.asm -o build/asm/program.o || { echo "Assembly failed"; return 1; }
+    echo "Assembling MIXAL code using MDK..."
+    docker run --rm \
+        -v "$(pwd)":/work \
+        -w /work \
+        mdk-ready \
+        mixasm build/MIXAL/program.mixal -o build/bin/program.mix
 }
 
 link() {
-    echo "Linking the object file to produce the final binary..."
-    mkdir -p build/bin
-    ld build/asm/program.o -o build/bin/program || { echo "Linking failed"; exit 1; }
+    echo "Linking MIXAL program (automatic in MDK)"
+    # MIXAL typically doesn't require separate linking
 }
 
 binary() {
-    echo "Running the final binary..."
-    echo "|-------------------------|"
-    chmod +x build/bin/program
-    ./build/bin/program
+    echo "Executing MIXAL program"
+    docker run --rm \
+        -v "$(pwd)":/work \
+        -w /work \
+        mdk-ready \
+        mixvm build/bin/program.mix
 }
 
 build() {

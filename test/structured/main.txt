@@ -1,6 +1,5 @@
 int main() {
     int a = 4;
-    print a;
     
     int b;
     b = a+10;

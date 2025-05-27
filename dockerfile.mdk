@@ -1,0 +1,13 @@
+# Dockerfile.mdk
+FROM debian:bookworm
+
+# install only the MDK tools (mixasm, mixvm, etc.)
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends mdk \
+ && rm -rf /var/lib/apt/lists/*
+
+# make /work your default
+WORKDIR /work
+
+# ensure binaries are on PATH
+ENV PATH="/usr/bin:${PATH}"
