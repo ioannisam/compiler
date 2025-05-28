@@ -47,7 +47,7 @@ binary() {
         -v "$(pwd)":/work \
         -w /work \
         mdk-ready \
-        mixvm build/bin/program.mix
+        mixvm -r build/bin/program.mix
 }
 
 build() {

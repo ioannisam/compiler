@@ -49,12 +49,8 @@ Symbol* add_symbol(const char* name, const char* value, const char* type) {
     }
     sym->value = value ? strdup(value) : NULL;
     
-    sym->label = malloc(32);
-    if (!sym->label) {
-        fprintf(stderr, "Memory allocation failed in add_symbol (label)\n");
-        exit(EXIT_FAILURE);
-    }
-    sprintf(sym->label, "var%d", func_var_counter++);
+    // Keep using the original name instead of using a generic label
+    sym->label = strdup(name);
     
     sym->next = symbol_table;
     symbol_table = sym;

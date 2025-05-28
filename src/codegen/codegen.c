@@ -8,9 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-int data_label_counter = 0;
-int code_label_counter = 0;
-
 void generate_code(ASTNode* node, FILE* output) {
 
     if (!node) return;
@@ -76,23 +73,39 @@ void generate_code(ASTNode* node, FILE* output) {
 }
 
 void generate_code_to_file(ASTNode* node) {
-
-    FILE* output = fopen("build/asm/program.asm", "w");
+    FILE* output = fopen("build/MIXAL/program.mixal", "w");
     if (!output) {
         perror("Failed to open output file");
         exit(EXIT_FAILURE);
     }
 
-    // init state
     data_label_counter = code_label_counter = 0;
     init_symbol_table();
-
     collect_variables(node);
-    emit_data_section(node, output);
-    emit_bss_section(output);
-    emit_text_section(node, output);
-    emit_itoa(output);
-
+    
+    fprintf(output, "* GENERATED MIXAL PROGRAM\n");
+    fprintf(output, "TERM    EQU 19\n");
+    fprintf(output, "        ORIG 3000\n");
+    
+    collect_and_define_strings(node, output);
+    
+    generate_code(node, output);
+    
+    fprintf(output, "* Variables\n");
+    fprintf(output, "TEMP    CON 0\n");
+    fprintf(output, "TEMP2   CON 0\n");
+    fprintf(output, "RETADDR CON 0\n");
+    fprintf(output, "ARG     CON 0\n");
+    fprintf(output, "RETVAL  CON 0\n");
+    fprintf(output, "BUFFER  CON 0\n");
+    
+    Symbol* sym = get_symbol_table();
+    while (sym) {
+        fprintf(output, "%-8s CON 0\n", sym->name);
+        sym = sym->next;
+    }
+    
+    fprintf(output, "        END START\n");
     fclose(output);
     free_symbol_table();
 }

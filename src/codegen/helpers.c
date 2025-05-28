@@ -6,6 +6,37 @@
 #include <stdbool.h>
 #include <string.h>
 
+#define MAX_LOOP_DEPTH 100
+int loop_stack[MAX_LOOP_DEPTH];
+int loop_stack_top = -1;
+
+int data_label_counter = 0;
+int code_label_counter = 0;
+
+void push_loop(int label) {
+    if (loop_stack_top >= MAX_LOOP_DEPTH - 1) {
+        fprintf(stderr, "Error: Loop nesting too deep\n");
+        exit(EXIT_FAILURE);
+    }
+    loop_stack[++loop_stack_top] = label;
+}
+
+int pop_loop(void) {
+    if (loop_stack_top < 0) {
+        fprintf(stderr, "Error: Loop stack underflow\n");
+        exit(EXIT_FAILURE);
+    }
+    return loop_stack[loop_stack_top--];
+}
+
+int current_loop(void) {
+    if (loop_stack_top < 0) {
+        fprintf(stderr, "Error: Break outside of loop\n");
+        exit(EXIT_FAILURE);
+    }
+    return loop_stack[loop_stack_top];
+}
+
 // Main Check
 bool has_main_function(ASTNode* functions) {
     while (functions) {
@@ -55,11 +86,6 @@ void collect_print_messages(ASTNode* node, FILE* output) {
     }
 }
 
-void emit_data_section(ASTNode* node, FILE* output) {
-    fprintf(output, "section .data\n");
-    collect_print_messages(node, output);
-}
-
 // BSS Section Helpers
 void collect_variables(ASTNode* node) {
     if (!node) return;
@@ -96,54 +122,145 @@ void collect_variables(ASTNode* node) {
     }
 }
 
-void emit_bss_section(FILE* output) {
-    fprintf(output, "section .bss\n");
-    fprintf(output, "print_buffer: resb 20\n");
-    Symbol* sym = get_symbol_table();
-    while (sym) {
-        fprintf(output, "%s: resq 1\n", sym->label);
-        sym = sym->next;
+void emit_string_data(ASTNode* node, FILE* output) {
+    // Use a static array to track which strings we've already processed
+    static ASTNode* processed_strings[100] = {NULL};
+    static int processed_count = 0;
+    
+    if (!node) return;
+    
+    // Process print nodes with string expressions
+    if (node->type == NODE_PRINT && node->print_expr.expr && 
+        node->print_expr.expr->type == NODE_STR) {
+        
+        // Check if we've already processed this string node
+        int already_processed = 0;
+        for (int i = 0; i < processed_count; i++) {
+            if (processed_strings[i] == node->print_expr.expr) {
+                already_processed = 1;
+                break;
+            }
+        }
+        
+        if (!already_processed) {
+            // Add to processed list
+            processed_strings[processed_count++] = node->print_expr.expr;
+            
+            const char* str = node->print_expr.expr->str_value;
+            // Use a consistent counter that matches handle_print
+            static int str_label = 0;
+            
+            fprintf(output, "MSG%d   ", str_label++);
+            
+            // Split string into 5-character ALF blocks with trailing space
+            int len = strlen(str);
+            int i = 0;
+            
+            while (i < len) {
+                fprintf(output, "ALF \"");
+                
+                // Output up to 5 characters per ALF directive
+                int j;
+                for (j = 0; j < 5 && i < len; j++, i++) {
+                    fputc(str[i], output);
+                }
+                
+                // Pad with spaces
+                for (; j < 5; j++) {
+                    fputc(' ', output);
+                }
+                
+                fprintf(output, "\"\n");
+                
+                // If we have more characters, add a continuation
+                if (i < len) {
+                    fprintf(output, "        ");
+                }
+            }
+            // Add trailing spaces for proper output format
+            fprintf(output, "        ALF \"     \"\n");
+        }
+    }
+    
+    // Recursively process all node types that might contain print statements
+    if (node->type == NODE_PROGRAM) {
+        emit_string_data(node->program.functions, output);
+        emit_string_data(node->program.main_block, output);
+    } else if (node->type == NODE_COMPOUND) {
+        emit_string_data(node->binop.left, output);
+        emit_string_data(node->binop.right, output);
+    } else if (node->type == NODE_IF) {
+        emit_string_data(node->control.condition, output);
+        emit_string_data(node->control.if_body, output);
+        if (node->control.else_body) {
+            emit_string_data(node->control.else_body, output);
+        }
+    } else if (node->type == NODE_WHILE) {
+        emit_string_data(node->control.condition, output);
+        emit_string_data(node->control.loop_body, output);
+    } else if (node->type == NODE_FUNC) {
+        emit_string_data(node->func.body, output);
     }
 }
 
-// Text Section Helpers
-void emit_text_section(ASTNode* node, FILE* output) {
-    fprintf(output, "section .text\n");
-    generate_code(node, output);
-}
-
-void emit_itoa(FILE* output) {
-    fprintf(output, "\nitoa:\n"
-                    "    push rbx\n    push rcx\n    push rdx\n"
-                    "    mov rax, rdi          ; rdi contains the number to convert\n"
-                    "    mov rdi, rsi          ; rsi is the buffer address\n"
-                    "    add rdi, 19           ; move to the end of the buffer\n"
-                    "    mov rcx, 10           ; divisor for base 10\n"
-                    "    mov rbx, 0            ; character count\n"
-                    "    xor r8, r8            ; flag for negative (0 = positive)\n"
-                    "    test rax, rax         ; check if the number is negative\n"
-                    "    jns .itoa_loop_start  ; jump if non-negative\n"
-                    "    mov r8, 1             ; set negative flag\n"
-                    "    neg rax               ; make the number positive\n"
-                    ".itoa_loop_start:\n"
-                    ".itoa_loop:\n"
-                    "    xor rdx, rdx          ; clear rdx for division\n"
-                    "    div rcx               ; divide rax by 10\n"
-                    "    add dl, '0'           ; convert remainder to ASCII\n"
-                    "    dec rdi               ; move buffer pointer back\n"
-                    "    mov [rdi], dl         ; store the character\n"
-                    "    inc rbx               ; increment character count\n"
-                    "    test rax, rax         ; check if quotient is 0\n"
-                    "    jnz .itoa_loop        ; repeat if quotient is not 0\n"
-                    "    test r8, r8           ; check if negative\n"
-                    "    jz .itoa_no_sign\n"
-                    "    dec rdi               ; move pointer back for '-'\n"
-                    "    mov byte [rdi], '-'   ; store the negative sign\n"
-                    "    inc rbx               ; increment character count\n"
-                    ".itoa_no_sign:\n"
-                    "    mov byte [rdi + rbx], 0xA ; add newline character\n"
-                    "    inc rbx               ; increment character count\n"
-                    "    mov rax, rbx          ; return character count in rax\n"
-                    "    pop rdx\n    pop rcx\n    pop rbx\n"
-                    "    ret\n");
+void collect_and_define_strings(ASTNode* node, FILE* output) {
+    if (!node) return;
+    
+    if (node->type == NODE_PRINT && node->print_expr.expr && 
+        node->print_expr.expr->type == NODE_STR) {
+        
+        static int str_counter = 0;
+        int current_str = str_counter++;
+        const char* str = node->print_expr.expr->str_value;
+        
+        node->print_expr.expr->num_value = current_str;
+        
+        fprintf(output, "STR%d   ", current_str);
+        
+        // MIXAL strings use ALF directives (5 chars each)
+        int len = strlen(str);
+        int pos = 0;
+        while (pos < len) {
+            fprintf(output, "ALF \"");
+            
+            int chars_to_output = (len - pos > 5) ? 5 : len - pos;
+            for (int i = 0; i < chars_to_output; i++) {
+                fputc(str[pos + i], output);
+            }
+            
+            // pad with spaces if needed
+            for (int i = chars_to_output; i < 5; i++) {
+                fputc(' ', output);
+            }
+            
+            fprintf(output, "\"\n");
+            pos += chars_to_output;
+            
+            // next ALF if needed
+            if (pos < len) {
+                fprintf(output, "        ");
+            }
+        }
+        
+        fprintf(output, "        ALF \"     \"\n");
+    }
+    
+    if (node->type == NODE_PROGRAM) {
+        collect_and_define_strings(node->program.functions, output);
+        collect_and_define_strings(node->program.main_block, output);
+    } else if (node->type == NODE_COMPOUND) {
+        collect_and_define_strings(node->binop.left, output);
+        collect_and_define_strings(node->binop.right, output);
+    } else if (node->type == NODE_IF) {
+        collect_and_define_strings(node->control.condition, output);
+        collect_and_define_strings(node->control.if_body, output);
+        if (node->control.else_body) {
+            collect_and_define_strings(node->control.else_body, output);
+        }
+    } else if (node->type == NODE_WHILE) {
+        collect_and_define_strings(node->control.condition, output);
+        collect_and_define_strings(node->control.loop_body, output);
+    } else if (node->type == NODE_FUNC) {
+        collect_and_define_strings(node->func.body, output);
+    }
 }
