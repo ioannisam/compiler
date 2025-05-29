@@ -92,12 +92,12 @@ void generate_code_to_file(ASTNode* node) {
     generate_code(node, output);
     
     fprintf(output, "* Variables\n");
-    fprintf(output, "TEMP    CON 0\n");
-    fprintf(output, "TEMP2   CON 0\n");
+    fprintf(output, "TEMP    CON  0\n");
+    fprintf(output, "TEMP2   CON  0\n");
     fprintf(output, "RETADDR CON 0\n");
     fprintf(output, "ARG     CON 0\n");
     fprintf(output, "RETVAL  CON 0\n");
-    fprintf(output, "BUFFER  CON 0\n");
+    fprintf(output, "BUFFER  CON  0(0:5)\n");
     
     Symbol* sym = get_symbol_table();
     while (sym) {

@@ -123,17 +123,15 @@ void collect_variables(ASTNode* node) {
 }
 
 void emit_string_data(ASTNode* node, FILE* output) {
-    // Use a static array to track which strings we've already processed
+
     static ASTNode* processed_strings[100] = {NULL};
     static int processed_count = 0;
     
     if (!node) return;
     
-    // Process print nodes with string expressions
     if (node->type == NODE_PRINT && node->print_expr.expr && 
         node->print_expr.expr->type == NODE_STR) {
         
-        // Check if we've already processed this string node
         int already_processed = 0;
         for (int i = 0; i < processed_count; i++) {
             if (processed_strings[i] == node->print_expr.expr) {
@@ -143,46 +141,41 @@ void emit_string_data(ASTNode* node, FILE* output) {
         }
         
         if (!already_processed) {
-            // Add to processed list
             processed_strings[processed_count++] = node->print_expr.expr;
             
             const char* str = node->print_expr.expr->str_value;
-            // Use a consistent counter that matches handle_print
             static int str_label = 0;
             
             fprintf(output, "MSG%d   ", str_label++);
             
-            // Split string into 5-character ALF blocks with trailing space
             int len = strlen(str);
             int i = 0;
             
             while (i < len) {
                 fprintf(output, "ALF \"");
                 
-                // Output up to 5 characters per ALF directive
+                // up to 5 characters per ALF directive
                 int j;
                 for (j = 0; j < 5 && i < len; j++, i++) {
                     fputc(str[i], output);
                 }
                 
-                // Pad with spaces
+                // pad with spaces
                 for (; j < 5; j++) {
                     fputc(' ', output);
                 }
                 
                 fprintf(output, "\"\n");
                 
-                // If we have more characters, add a continuation
+                // if there is a continuation
                 if (i < len) {
                     fprintf(output, "        ");
                 }
             }
-            // Add trailing spaces for proper output format
             fprintf(output, "        ALF \"     \"\n");
         }
     }
     
-    // Recursively process all node types that might contain print statements
     if (node->type == NODE_PROGRAM) {
         emit_string_data(node->program.functions, output);
         emit_string_data(node->program.main_block, output);

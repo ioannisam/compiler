@@ -1,0 +1,18 @@
+int add(int a, int b) {
+    return a+b;
+}
+
+int sub(int a, int b) {
+    return a-b;
+}
+
+int main() {
+
+    int a = 5;
+    int b = 2;
+    inc c = add(a,b);
+    
+    print c;
+    print sub(a,b);
+    return 0;
+}

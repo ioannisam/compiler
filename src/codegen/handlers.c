@@ -8,14 +8,12 @@
 #include <stdbool.h>
 
 void handle_program(ASTNode* node, FILE* output) {
-    // First generate all functions
     generate_code(node->program.functions, output);
     
     if (has_main_function(node->program.functions)) {
-        // For structured programs with main function
+        // structured programs
         fprintf(output, "START   JMP     main            * Jump to main function\n\n");
         
-        // Add the RETURN section with proper terminal device handling
         fprintf(output, "RETURN  STA     RETVAL          * Save return value\n");
         fprintf(output, "        LDA     RETVAL          * Load return value\n");
         fprintf(output, "        CHAR                    * Convert numeric to characters (in X)\n");
@@ -33,43 +31,53 @@ void handle_program(ASTNode* node, FILE* output) {
 }
 
 void handle_function(ASTNode* node, FILE* output) {
-    fprintf(output, "%s    STJ     RETADDR         * Save return address\n", node->func.name);
+    char func_label[7];
+    strncpy(func_label, node->func.name, 6);
+    func_label[6] = '\0';
     
-    // Handle parameters more robustly
+    static int func_counter = 0;
+    int this_func = func_counter++;
+    
+    fprintf(output, "%s    STJ  RT%d\n", 
+            func_label, this_func);
+    
+    fprintf(output, "        ST1  T1%d\n", this_func);
+    fprintf(output, "        ST2  T2%d\n", this_func);
+    
     ASTNode* params = node->func.params;
-    if (params && params->type == NODE_COMPOUND && params->binop.left) {
-        ASTNode* param = params->binop.left;
-        if (param->type == NODE_PARAM) {
-            fprintf(output, "        LDA     ARG             * Load argument\n");
-            fprintf(output, "        STA     %s              * Store to parameter\n", param->param.name);
+    if (params && params->type == NODE_COMPOUND) {
+        if (params->binop.left && params->binop.left->type == NODE_PARAM) {
+            char* param_name = params->binop.left->param.name;
+            fprintf(output, "        STA  %s              * Store first parameter\n", param_name);
         }
     }
     
-    // Function body
     if (node->func.body) {
         generate_code(node->func.body, output);
     }
     
-    // Default return if no explicit return
-    fprintf(output, "        LDA     =0=             * Default return\n");
-    fprintf(output, "        JMP     RETADDR         * Return to caller\n\n");
+    fprintf(output, "        LD1  T1%d\n", this_func);
+    fprintf(output, "        LD2  T2%d\n", this_func);
+    
+    fprintf(output, "RT%d    JMP  *\n\n", this_func);
+    
+    fprintf(output, "T1%d    CON  0\n", this_func);
+    fprintf(output, "T2%d    CON  0\n", this_func);
 }
 
 void handle_call(ASTNode* node, FILE* output) {
-    // Process arguments (first argument only for simplicity)
     if (node->func_call.args && node->func_call.args->binop.left) {
         generate_code(node->func_call.args->binop.left, output);
-        fprintf(output, "        STA     ARG             * Store argument\n");
     }
     
-    // Save return address and call function
-    fprintf(output, "        STJ     RETADDR         * Set return address\n");
-    fprintf(output, "        JMP     %s              * Call function\n", 
-            node->func_call.func_name);
+    char func_label[7];
+    strncpy(func_label, node->func_call.func_name, 6);
+    func_label[6] = '\0';
+    
+    fprintf(output, "        JMP  %s\n", func_label);
 }
 
 void handle_num(ASTNode* node, FILE* output) {
-    // In MIXAL, load immediate values with LDA
     fprintf(output, "        LDA =%d=\n", node->num_value);
 }
 
@@ -86,10 +94,8 @@ void handle_print(ASTNode* node, FILE* output) {
     ASTNode* expr = node->print_expr.expr;
     
     if (expr->type == NODE_STR) {
-        // Use the stored string ID
         fprintf(output, "        OUT STR%d(TERM)\n", expr->num_value);
     } else {
-        // Numeric output with proper formatting
         generate_code(expr, output);
         fprintf(output, "        CHAR\n");
         fprintf(output, "        STX BUFFER\n");
@@ -98,10 +104,8 @@ void handle_print(ASTNode* node, FILE* output) {
 }
 
 void handle_decl(ASTNode* node, FILE* output) {
-    // Just add to symbol table, MIXAL variables will be declared in data section
     add_symbol(node->decl.name, NULL, node->decl.type);
     
-    // For initialization, we'll use the STJ instruction to store a value
     if (node->decl.init_expr) {
         generate_code(node->decl.init_expr, output);
         fprintf(output, "        STA %s\n", node->decl.name);
@@ -133,28 +137,21 @@ void handle_if(ASTNode* node, FILE* output) {
     int else_label = code_label_counter++;
     int end_label = code_label_counter++;
     
-    // Generate condition code
     generate_code(node->control.condition, output);
     
-    // Compare accumulator with 0 and jump to else if equal (condition is false)
     fprintf(output, "        CMPA =0=\n");
     fprintf(output, "        JE   ELSE%d\n", else_label);
     
-    // Generate if-body code
     generate_code(node->control.if_body, output);
     
-    // Jump to end after if-body - CRITICAL FIX HERE
     fprintf(output, "        JMP  END%d\n", end_label);
     
-    // Define else label
     fprintf(output, "ELSE%d   NOP\n", else_label);
     
-    // Generate else-body code if it exists
     if (node->control.else_body) {
         generate_code(node->control.else_body, output);
     }
     
-    // Define end label
     fprintf(output, "END%d    NOP\n", end_label);
 }
 
@@ -162,32 +159,19 @@ void handle_while(ASTNode* node, FILE* output) {
     int loop_label = code_label_counter++;
     int exit_label = code_label_counter++;
     
-    // Push this loop's end label onto the stack
     push_loop(exit_label);
     
-    // Add a JMP instruction from START to the loop label
-    fprintf(output, "        JMP LOOP%d\n", loop_label);  // Jump to the loop start
-    
-    // Define the loop label
-    fprintf(output, "LOOP%d   NOP\n", loop_label);  // Label with proper spacing
-    
-    // Generate condition code
+    fprintf(output, "        JMP LOOP%d\n", loop_label);
+    fprintf(output, "LOOP%d   NOP\n", loop_label);
     generate_code(node->control.condition, output);
     
-    // Compare and jump if condition is false
     fprintf(output, "        CMPA =0=\n");
     fprintf(output, "        JE   EXIT%d\n", exit_label);
     
-    // Generate loop body
     generate_code(node->control.loop_body, output);
-    
-    // Jump back to start of loop
     fprintf(output, "        JMP LOOP%d\n", loop_label);
-    
-    // Define the exit label
     fprintf(output, "EXIT%d   NOP\n", exit_label);
     
-    // Pop loop end label
     pop_loop();
 }
 
@@ -197,120 +181,127 @@ void handle_break(ASTNode* node, FILE* output) {
 }
 
 void handle_return(ASTNode* node, FILE* output) {
-    // Generate the return expression
     if (node->return_stmt.expr) {
         generate_code(node->return_stmt.expr, output);
     } else {
-        // Default return 0
-        fprintf(output, "        LDA     =0=             * Default return value\n");
+        fprintf(output, "        LDA  =0=             * Default return 0\n");
     }
-    
-    // Return to caller
-    fprintf(output, "        JMP     RETADDR         * Return to caller\n");
 }
 
 void handle_binop(ASTNode* node, FILE* output) {
     switch (node->binop.op) {
         case OP_ADD:
             generate_code(node->binop.left, output);
-            fprintf(output, "        STA TEMP\n");
+            fprintf(output, "        STA     TEMP\n");
             generate_code(node->binop.right, output);
-            fprintf(output, "        STA TEMP2\n");
-            fprintf(output, "        LDA TEMP\n");
-            fprintf(output, "        ADD TEMP2\n");
+            fprintf(output, "        ADD     TEMP\n");
             break;
             
         case OP_SUB:
             generate_code(node->binop.left, output);
-            fprintf(output, "        STA TEMP\n");
+            fprintf(output, "        STA     TEMP\n");
             generate_code(node->binop.right, output);
-            fprintf(output, "        STA TEMP2\n");
-            fprintf(output, "        LDA TEMP\n");
-            fprintf(output, "        SUB TEMP2\n");
+            fprintf(output, "        STA     TEMP2\n");
+            fprintf(output, "        LDA     TEMP\n");
+            fprintf(output, "        SUB     TEMP2\n");
             break;
             
         case OP_MUL:
             generate_code(node->binop.left, output);
-            fprintf(output, "        STA TEMP\n");
+            fprintf(output, "        STA     TEMP\n");
             generate_code(node->binop.right, output);
-            fprintf(output, "        STA TEMP2\n");
-            fprintf(output, "        LDA TEMP\n");
-            fprintf(output, "        MUL TEMP2\n");
+            fprintf(output, "        STA     TEMP2\n");
+            fprintf(output, "        LDA     TEMP\n");
+            fprintf(output, "        MUL     TEMP2\n");
+            fprintf(output, "        STX     TEMPX\n");
+            fprintf(output, "        STA     RESULT\n");
+            fprintf(output, "        LDA     RESULT\n");
             break;
-            
+
         case OP_DIV:
             generate_code(node->binop.left, output);
-            fprintf(output, "        STA TEMP\n");
+            fprintf(output, "        STA     TEMP\n");
             generate_code(node->binop.right, output);
-            fprintf(output, "        STA TEMP2\n");
-            fprintf(output, "        LDA TEMP\n");
-            fprintf(output, "        DIV TEMP2\n");
+            fprintf(output, "        STA     TEMP2\n");
+            fprintf(output, "        LDA     TEMP\n");
+            fprintf(output, "        LDX     =0=\n");
+            fprintf(output, "        DIV     TEMP2\n");
+            fprintf(output, "        STA     RESULT\n");
+            fprintf(output, "        LDA     RESULT\n");
             break;
-            
         case OP_LT:
             generate_code(node->binop.left, output);
-            fprintf(output, "        STA TEMP\n");
+            fprintf(output, "        STA     TEMP\n");
             generate_code(node->binop.right, output);
-            fprintf(output, "        STA TEMP2\n");
-            fprintf(output, "        LDA TEMP\n");
-            fprintf(output, "        CMPA TEMP2\n");
-            fprintf(output, "        JL 1F\n");
-            fprintf(output, "        LDA =0=\n");
-            fprintf(output, "        JMP 2F\n");
-            fprintf(output, "1H      LDA =1=\n");
-            fprintf(output, "2H      NOP\n");
+            fprintf(output, "        STA     TEMP2\n");
+            fprintf(output, "        LDA     TEMP\n");
+            fprintf(output, "        CMPA    TEMP2\n");
+            fprintf(output, "        JGE     *+3\n");
+            fprintf(output, "        LDA     =1=\n");
+            fprintf(output, "        JMP     *+2\n");
+            fprintf(output, "        LDA     =0=\n");
             break;
             
         case OP_GT:
             generate_code(node->binop.left, output);
-            fprintf(output, "        STA TEMP\n");
+            fprintf(output, "        STA     TEMP\n");
             generate_code(node->binop.right, output);
-            fprintf(output, "        STA TEMP2\n");
-            fprintf(output, "        LDA TEMP\n");
-            fprintf(output, "        CMPA TEMP2\n");
-            fprintf(output, "        JG 1F\n");
-            fprintf(output, "        LDA =0=\n");
-            fprintf(output, "        JMP 2F\n");
-            fprintf(output, "1H      LDA =1=\n");
-            fprintf(output, "2H      NOP\n");
+            fprintf(output, "        STA     TEMP2\n");
+            fprintf(output, "        LDA     TEMP\n");
+            fprintf(output, "        CMPA    TEMP2\n");
+            fprintf(output, "        JLE     *+3\n");
+            fprintf(output, "        LDA     =1=\n");
+            fprintf(output, "        JMP     *+2\n");
+            fprintf(output, "        LDA     =0=\n");
             break;
             
         case OP_EQ:
             generate_code(node->binop.left, output);
-            fprintf(output, "        STA TEMP\n");
+            fprintf(output, "        STA     TEMP\n");
             generate_code(node->binop.right, output);
-            fprintf(output, "        STA TEMP2\n");
-            fprintf(output, "        LDA TEMP\n");
-            fprintf(output, "        CMPA TEMP2\n");
-            fprintf(output, "        JE 1F\n");
-            fprintf(output, "        LDA =0=\n");
-            fprintf(output, "        JMP 2F\n");
-            fprintf(output, "1H      LDA =1=\n");
-            fprintf(output, "2H      NOP\n");
+            fprintf(output, "        STA     TEMP2\n");
+            fprintf(output, "        LDA     TEMP\n");
+            fprintf(output, "        CMPA    TEMP2\n");
+            fprintf(output, "        JNE     *+3\n");
+            fprintf(output, "        LDA     =1=\n");
+            fprintf(output, "        JMP     *+2\n");
+            fprintf(output, "        LDA     =0=\n");
             break;
             
         default:
-            fprintf(stderr, "Unsupported binary operation: %d\n", node->binop.op);
-            break;
+            fprintf(output, "        * Unsupported binary operator\n");
+            fprintf(output, "        LDA     =0=             * default to 0\n");
     }
 }
 
 void handle_unop(ASTNode* node, FILE* output) {
     generate_code(node->unop.operand, output);
+    
     switch (node->unop.op) {
         case OP_LNOT:
-            fprintf(output, "    cmp rax, 0\n    sete al\n    movzx rax, al\n");
+            fprintf(output, "        CMPA    =0=\n");
+            fprintf(output, "        JNE     *+3\n");
+            fprintf(output, "        LDA     =1=\n");
+            fprintf(output, "        JMP     *+2\n");
+            fprintf(output, "        LDA     =0=\n");
             break;
+            
         case OP_BNOT:
-            fprintf(output, "    not rax\n");
+            fprintf(output, "        STA     TEMP\n");
+            fprintf(output, "        ENTA    0,1\n");
+            fprintf(output, "        SUB     TEMP\n");
+            fprintf(output, "        SUB     =1=\n");
             break;
+            
         case OP_NEG:
-            fprintf(output, "    neg rax\n");
+            fprintf(output, "        STA     TEMP\n");
+            fprintf(output, "        ENTA    0,1\n");
+            fprintf(output, "        SUB     TEMP\n");
             break;
+            
         case OP_POS:
             break;
         default:
-            fprintf(output, "    ; unsupported unary operator\n");
-            break;
+            fprintf(output, "        * Unsupported unary operator\n");
     }
 }
