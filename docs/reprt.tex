@@ -1,0 +1,85 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage[super,sort&compress]{cite}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=black,
+    urlcolor=blue
+}
+\newcolumntype{C}{>{\centering\arraybackslash}c}
+\title{Compiler}
+\author{Ioannis Michalainas}
+\date{March-June 2025}
+
+\begin{document}
+
+\maketitle
+\begin{center}
+  \textbf{Repository:} \\
+  \href{https://github.com/ioannisam/compiler}{github.com/ioannisam/compiler}
+\end{center}
+\bigskip
+\begin{abstract}
+    This project implements a compiler of a c-style programming language. It combines both scripted and structured utilities.
+\end{abstract}
+\tableofcontents
+\clearpage
+
+\newgeometry{top=1.5cm, bottom=1.5cm, right=1.5cm, left=1.5cm}
+\section{Introduction}
+
+\section{Project Structure}
+    \subsection{Directory Layout}
+    \subsection{Build and Utilities}
+
+\section{Lexical Analysis}
+    \subsection{Lexer Implementation (\texttt{lang.l})}
+    \subsection{Token Definitions}
+
+\section{Syntax Analysis}
+    \subsection{Parser Implementation (\texttt{parser.y})}
+    \subsection{AST Representation}
+    \subsection{Error Handling}
+
+\section{Semantic Analysis}
+    \subsection{Symbol Table Management}
+    \subsection{Semantic Error Reporting}
+
+\section{Code Generation}
+    \subsection{Assembly x86}
+    \subsection{MIXAL}
+
+\section{Testing and Validation}
+    \subsection{Scripted Tests}
+    \subsection{Structured Tests}
+
+\appendix
+\section{Future Work and TODO}
+Future work incudes adding more features, such as more data types, keywords, instructions and optimizations.
+
+\section{Tools and Frameworks}
+The following tools and frameworks were used:
+\begin{itemize}
+  \item Bison
+  \item Flex
+  \item GCC
+  \item NASM
+  \item LD
+  \item MDK
+\end{itemize}
+
+\begin{thebibliography}{9}
+    \bibitem[\href{https://data-https://www.gnu.org/software/mdk/}{1}]{GNU MDK}
+    GNU MDK
+    \bibitem[\href{http://www.jklp.org/profession/books/mix/index.html}{2}]{Computer Organization and Assembly Language Programming}
+        Computer Organization and Assembly Language Programming
+\end{thebibliography}
+
+\end{document}
