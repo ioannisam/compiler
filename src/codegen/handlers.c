@@ -13,12 +13,11 @@ void handle_program(ASTNode* node, FILE* output) {
 
     fprintf(output, "global _start\n_start:\n");
     
-    // explicit main or scripted block
     if (has_main_function(node->program.functions)) { 
         fprintf(output,
-            "    call main       ; RAX ← main()\n"
-            "    mov rdi, rax    ; RDI ← return value of main\n"
-            "    mov rax, 60     ; syscall: exit\n"
+            "    call main\n"
+            "    mov rdi, rax\n"
+            "    mov rax, 60\n"
             "    syscall\n");
     } else if (node->program.main_block) { 
         generate_code(node->program.main_block, output);
@@ -34,9 +33,8 @@ void handle_function(ASTNode* node, FILE* output) {
     fprintf(output, "    push rbp\n");
     fprintf(output, "    mov rbp, rsp\n");
 
-    // Load parameters from the stack into their symbols
     ASTNode* params = node->func.params;
-    int param_offset = 16;  // Parameters start at RBP + 16
+    int param_offset = 16;
     while (params) {
         if (params->type == NODE_COMPOUND) {
             ASTNode* param_node = params->binop.left;
@@ -102,7 +100,7 @@ void handle_ident(ASTNode* node, FILE* output) {
         fprintf(stderr, "Error: Undefined variable '%s'\n", node->str_value);
         exit(EXIT_FAILURE);
     }
-    fprintf(output, "    mov rax, [%s]    ; load variable %s\n", sym->label, sym->name);
+    fprintf(output, "    mov rax, [%s]\n", sym->label);
 }
 
 void handle_print(ASTNode* node, FILE* output) {
@@ -110,38 +108,34 @@ void handle_print(ASTNode* node, FILE* output) {
     ASTNode* expr = node->print_expr.expr;
     if (expr->type == NODE_STR) {
         int len = (int)strlen(expr->str_value);
-        // Use global counter and don't increment it - we're referencing existing labels
         static int msg_ref_counter = 0;
         fprintf(output,
-            "    mov rax, 1         ; sys_write\n"
-            "    mov rdi, 1         ; stdout\n"
-            "    mov rsi, msg%d     ; message address\n"
-            "    mov rdx, %d        ; message length\n"
+            "    mov rax, 1\n"
+            "    mov rdi, 1\n"
+            "    mov rsi, msg%d\n"
+            "    mov rdx, %d\n"
             "    syscall\n",
             msg_ref_counter++, len + 1);
     } else {
         generate_code(expr, output);
         fprintf(output,
             "    push rax\n    push rbx\n    push rcx\n    push rdx\n    push rdi\n    push rsi\n"
-            "    mov rdi, rax          ; number to convert (signed)\n"
-            "    mov rsi, print_buffer ; buffer address\n"
+            "    mov rdi, rax\n"
+            "    mov rsi, print_buffer\n"
             "    call itoa\n"
             "    mov rsi, print_buffer\n"
             "    add rsi, 20\n"
-            "    sub rsi, rax    ; start = buffer_end - length\n"
-            "    mov rdx, rax    ; length\n"
-            "    mov rax, 1      ; sys_write\n"
-            "    mov rdi, 1      ; stdout\n"
+            "    sub rsi, rax\n"
+            "    mov rdx, rax\n"
+            "    mov rax, 1\n"
+            "    mov rdi, 1\n"
             "    syscall\n"
             "    pop rsi\n    pop rdi\n    pop rdx\n    pop rcx\n    pop rbx\n    pop rax\n");
     }
 }
 
 void handle_decl(ASTNode* node, FILE* output) {
-    // add to symbol table
     Symbol* sym = add_symbol(node->decl.name, NULL, node->decl.type);
-    
-    // optional initialization
     if (node->decl.init_expr) {
         generate_code(node->decl.init_expr, output);
         fprintf(output, "    mov [%s], rax\n", sym->label);
@@ -210,7 +204,7 @@ void handle_return(ASTNode* node, FILE* output) {
     if (node->return_stmt.expr) {
         generate_code(node->return_stmt.expr, output);
     } else {
-        fprintf(output, "    xor rax, rax    ; return 0\n");
+        fprintf(output, "    xor rax, rax\n");
     }
     fprintf(output,
         "    mov rsp, rbp\n"
@@ -243,12 +237,12 @@ void handle_binop(ASTNode* node, FILE* output) {
             fprintf(output, "    idiv rbx\n");
             break;
         case OP_MOD:
-            fprintf(output, "    mov rcx, rax      ; Save right value\n");
-            fprintf(output, "    mov rax, rbx      ; Move left operand into rax\n");
-            fprintf(output, "    mov rbx, rcx      ; Move right operand into rbx\n");
-            fprintf(output, "    cqo               ; Sign-extend rax into rdx\n");
-            fprintf(output, "    idiv rbx          ; Signed division; remainder in rdx\n");
-            fprintf(output, "    mov rax, rdx      ; Move remainder to rax\n");
+            fprintf(output, "    mov rcx, rax\n");
+            fprintf(output, "    mov rax, rbx\n");
+            fprintf(output, "    mov rbx, rcx\n");
+            fprintf(output, "    cqo\n");
+            fprintf(output, "    idiv rbx\n");
+            fprintf(output, "    mov rax, rdx\n");
             break;
         case OP_EQ:
             fprintf(output, "    cmp rbx, rax\n");
