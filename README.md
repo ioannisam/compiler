@@ -150,3 +150,7 @@ Use the provided build script (`utils.sh` located at the project root) to automa
    Expected Output:
       Syntax error at line 1: syntax error (near 'end of input')
    ```
+
+## Apendix
+
+For more information about this project please refer to `docs/report.pdf`.
