@@ -88,6 +88,8 @@ void generate_code_to_file(ASTNode* node) {
     init_symbol_table();
 
     collect_variables(node);
+    verify_symbols(node);
+    
     emit_data_section(node, output);
     emit_bss_section(output);
     emit_text_section(node, output);

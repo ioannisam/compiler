@@ -7,6 +7,7 @@
 #include "parser/ast.h"
 
 bool has_main_function(ASTNode* functions);
+void verify_symbols(ASTNode* node);
 
 void collect_print_messages(ASTNode* node, FILE* output);
 void emit_data_section(ASTNode* node, FILE* output);

@@ -21,6 +21,80 @@ bool has_main_function(ASTNode* functions) {
     return false;
 }
 
+void verify_symbols(ASTNode* node) {
+    if (!node) return;
+    
+    switch (node->type) {
+        case NODE_IDENT:
+            if (!lookup_symbol(node->str_value)) {
+                fprintf(stderr, "Error: Undefined variable '%s'\n", node->str_value);
+                exit(EXIT_FAILURE);
+            }
+            break;
+            
+        case NODE_ASSIGN:
+            if (node->assign.target->type == NODE_IDENT) {
+                if (!lookup_symbol(node->assign.target->str_value)) {
+                    fprintf(stderr, "Error: Undefined variable '%s'\n", node->assign.target->str_value);
+                    exit(EXIT_FAILURE);
+                }
+            }
+            verify_symbols(node->assign.value);
+            break;
+        case NODE_CALL:
+            {
+                ASTNode* args = node->func_call.args;
+                while (args) {
+                    if (args->type == NODE_COMPOUND) {
+                        verify_symbols(args->binop.left);
+                        args = args->binop.right;
+                    } else {
+                        verify_symbols(args);
+                        break;
+                    }
+                }
+            }
+            break;
+        case NODE_BINOP:
+            verify_symbols(node->binop.left);
+            verify_symbols(node->binop.right);
+            break;
+        case NODE_UNOP:
+            verify_symbols(node->unop.operand);
+            break;
+        case NODE_PRINT:
+            verify_symbols(node->print_expr.expr);
+            break;
+        case NODE_IF:
+            verify_symbols(node->control.condition);
+            verify_symbols(node->control.if_body);
+            if (node->control.else_body) {
+                verify_symbols(node->control.else_body);
+            }
+            break;
+        case NODE_WHILE:
+            verify_symbols(node->control.condition);
+            verify_symbols(node->control.loop_body);
+            break;
+        case NODE_RETURN:
+            if (node->return_stmt.expr) {
+                verify_symbols(node->return_stmt.expr);
+            }
+            break;
+        case NODE_COMPOUND:
+            verify_symbols(node->binop.left);
+            verify_symbols(node->binop.right);
+            break;
+        case NODE_PROGRAM:
+            verify_symbols(node->program.functions);
+            verify_symbols(node->program.main_block);
+            break;
+        case NODE_FUNC:
+            verify_symbols(node->func.body);
+            break;
+    }
+}
+
 // Data Section Helpers
 void collect_print_messages(ASTNode* node, FILE* output) {
 
