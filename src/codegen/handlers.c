@@ -12,14 +12,14 @@ void handle_program(ASTNode* node, FILE* output) {
     
     if (has_main_function(node->program.functions)) {
         // structured programs
-        fprintf(output, "START   JMP     main            * Jump to main function\n\n");
+        fprintf(output, "START   JMP     main\n\n");
         
-        fprintf(output, "RETURN  STA     RETVAL          * Save return value\n");
-        fprintf(output, "        LDA     RETVAL          * Load return value\n");
-        fprintf(output, "        CHAR                    * Convert numeric to characters (in X)\n");
-        fprintf(output, "        STX     BUFFER          * Store chars to buffer\n");
-        fprintf(output, "        OUT     BUFFER(TERM)    * Output buffer to terminal\n");
-        fprintf(output, "        HLT                     * Halt\n");
+        fprintf(output, "RETURN  STA     RETVAL\n");
+        fprintf(output, "        LDA     RETVAL\n");
+        fprintf(output, "        CHAR\n");
+        fprintf(output, "        STX     BUFFER\n");
+        fprintf(output, "        OUT     BUFFER(TERM)\n");
+        fprintf(output, "        HLT\n");
         fprintf(output, "        HLT\n");
         fprintf(output, "        HLT\n");
     } else if (node->program.main_block) {
@@ -210,24 +210,49 @@ void handle_binop(ASTNode* node, FILE* output) {
             generate_code(node->binop.left, output);
             fprintf(output, "        STA     TEMP\n");
             generate_code(node->binop.right, output);
-            fprintf(output, "        STA     TEMP2\n");
-            fprintf(output, "        LDA     TEMP\n");
-            fprintf(output, "        MUL     TEMP2\n");
-            fprintf(output, "        STX     TEMPX\n");
-            fprintf(output, "        STA     RESULT\n");
-            fprintf(output, "        LDA     RESULT\n");
+            fprintf(output, "        MUL     TEMP\n");
+            fprintf(output, "        STX     TEMP2\n");
+            fprintf(output, "        LDA     TEMP2\n");
             break;
 
         case OP_DIV:
-            generate_code(node->binop.left, output);
-            fprintf(output, "        STA     TEMP\n");
+            // First evaluate and store the divisor
             generate_code(node->binop.right, output);
+            fprintf(output, "        STA     TEMP\n");
+            
+            // Load dividend into X register via A
+            generate_code(node->binop.left, output);
             fprintf(output, "        STA     TEMP2\n");
-            fprintf(output, "        LDA     TEMP\n");
-            fprintf(output, "        LDX     =0=\n");
-            fprintf(output, "        DIV     TEMP2\n");
-            fprintf(output, "        STA     RESULT\n");
-            fprintf(output, "        LDA     RESULT\n");
+            fprintf(output, "        LDX     TEMP2\n");
+            
+            // Clear A register AFTER loading X
+            fprintf(output, "        ENTA    0\n");
+            
+            // Perform division
+            fprintf(output, "        DIV     TEMP\n");
+            
+            // Result (quotient) is now in rA
+            break;
+        case OP_MOD:
+            // First evaluate and store the divisor
+            generate_code(node->binop.right, output);
+            fprintf(output, "        STA     TEMP\n");
+            
+            // Load dividend into X register via A
+            generate_code(node->binop.left, output);
+            fprintf(output, "        STA     TEMP2\n");
+            fprintf(output, "        LDX     TEMP2\n");
+            
+            // Clear A register before division
+            fprintf(output, "        ENTA    0\n");
+            
+            // Perform division
+            fprintf(output, "        DIV     TEMP\n");
+            
+            // For modulo, we want the remainder which is in rX
+            // Transfer X to A since our convention is to return results in A
+            fprintf(output, "        STX     TEMP2\n");
+            fprintf(output, "        LDA     TEMP2\n");
             break;
         case OP_LT:
             generate_code(node->binop.left, output);

@@ -6,13 +6,28 @@ int sub(int a, int b) {
     return a-b;
 }
 
+int mult(int a, int b) {
+    return a*b;
+}
+
+int div(int a, int b) {
+    if (b == 0) return 0;
+    return a/b;
+}
+
+int mod(int a, int b) {
+    if (b == 0) return 0;
+    return a%b;
+}
+
 int main() {
 
     int a = 5;
     int b = 2;
-    inc c = add(a,b);
-    
-    print c;
+    print add(a,b);
     print sub(a,b);
+    print mult(a,b);
+    print div(a,b);
+    print mod(a,b);
     return 0;
 }
